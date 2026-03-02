@@ -109,6 +109,24 @@
                 </div>
             </div>
             <div class="space-y-6">
+                <!-- Pomodoro Timer (Dipindah ke Dashboard & Ditambah Efek F1) -->
+                <div id="pomodoroCard" class="card bg-white dark:bg-gray-800 border-t-4 border-red-500 text-center relative overflow-hidden transition-all duration-500">
+                    <div class="absolute -right-4 -top-4 opacity-5"><i class="ph-fill ph-timer text-9xl"></i></div>
+                    <h2 id="pomodoroTitle" class="text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2 transition-colors duration-500"><i id="pomodoroTitleIcon" class="ph-fill ph-clock-countdown text-red-500 transition-colors duration-500"></i> Mode Fokus</h2>
+                    <p id="pomodoroModeText" class="text-xs font-medium text-red-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500">Waktu Kerja</p>
+                    
+                    <div id="pomodoroDisplay" class="text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-md">25:00</div>
+                    
+                    <div class="flex justify-center gap-3 relative z-10 mb-4">
+                        <button onclick="togglePomodoro()" id="btnPomoStart" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-fill ph-play text-2xl"></i></button>
+                        <button onclick="resetPomodoro()" id="btnPomoReset" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-bold ph-arrow-counter-clockwise text-xl"></i></button>
+                    </div>
+                    <div class="flex justify-center gap-2 text-xs relative z-10">
+                        <button onclick="switchPomodoroMode(25)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 transition-colors">Kerja 25m</button>
+                        <button onclick="switchPomodoroMode(5)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 transition-colors">Rehat 5m</button>
+                    </div>
+                </div>
+
                 <!-- Keuangan -->
                 <div class="card bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg border-0">
                     <h2 class="text-sm font-medium opacity-90 mb-2">Total Saldo</h2>
@@ -178,24 +196,6 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-1 space-y-6">
                 
-                <!-- NEW FEATURE: Pomodoro Timer -->
-                <div class="card bg-white dark:bg-gray-800 border-t-4 border-red-500 text-center relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 opacity-5"><i class="ph-fill ph-timer text-9xl"></i></div>
-                    <h2 class="text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2"><i class="ph-fill ph-clock-countdown text-red-500"></i> Mode Fokus</h2>
-                    <p id="pomodoroModeText" class="text-xs font-medium text-red-500 mb-4 uppercase tracking-widest relative z-10">Waktu Kerja</p>
-                    
-                    <div id="pomodoroDisplay" class="text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-6 relative z-10">25:00</div>
-                    
-                    <div class="flex justify-center gap-3 relative z-10 mb-4">
-                        <button onclick="togglePomodoro()" id="btnPomoStart" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center transition shadow-md"><i class="ph-fill ph-play text-2xl"></i></button>
-                        <button onclick="resetPomodoro()" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-full w-12 h-12 flex items-center justify-center transition shadow-md"><i class="ph-bold ph-arrow-counter-clockwise text-xl"></i></button>
-                    </div>
-                    <div class="flex justify-center gap-2 text-xs relative z-10">
-                        <button onclick="switchPomodoroMode(25)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200">Kerja 25m</button>
-                        <button onclick="switchPomodoroMode(5)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200">Rehat 5m</button>
-                    </div>
-                </div>
-
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-blue-500">
                     <h2 class="text-xl font-semibold mb-4 text-blue-600 dark:text-blue-400">Input Kegiatan</h2>
                     <form id="activityForm" class="space-y-4">
@@ -679,13 +679,65 @@
             }
         }
 
-        // Feature: Pomodoro Timer
+        // Feature: Pomodoro Timer & Dual Theme Logic
+        function updatePomodoroTheme(isRunning) {
+            const card = document.getElementById('pomodoroCard');
+            const title = document.getElementById('pomodoroTitle');
+            const titleIcon = document.getElementById('pomodoroTitleIcon');
+            const modeText = document.getElementById('pomodoroModeText');
+            const display = document.getElementById('pomodoroDisplay');
+            const btnStart = document.getElementById('btnPomoStart');
+            const btnReset = document.getElementById('btnPomoReset');
+
+            if (!card) return;
+
+            if (isRunning) {
+                if (isPomodoroWork) {
+                    // MODE FOKUS: Hitam Pekat dengan Cahaya Ungu Terang (F1 Theme)
+                    card.className = "card bg-gray-950 border-t-4 border-purple-500 text-center relative overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]";
+                    title.className = "text-lg font-bold mb-1 text-purple-400 relative z-10 flex justify-center items-center gap-2 transition-colors duration-500";
+                    titleIcon.className = "ph-fill ph-clock-countdown text-purple-500 transition-colors duration-500";
+                    modeText.className = "text-xs font-bold text-purple-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500";
+                    display.className = "text-5xl font-bold text-purple-400 tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]";
+                    btnStart.className = "bg-purple-600 hover:bg-purple-500 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.6)]";
+                    btnReset.className = "bg-gray-800 hover:bg-gray-700 text-purple-400 rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300";
+                } else {
+                    // MODE ISTIRAHAT: Hitam Pekat dengan Cahaya Oranye
+                    card.className = "card bg-gray-950 border-t-4 border-orange-500 text-center relative overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]";
+                    title.className = "text-lg font-bold mb-1 text-orange-400 relative z-10 flex justify-center items-center gap-2 transition-colors duration-500";
+                    titleIcon.className = "ph-fill ph-coffee text-orange-500 transition-colors duration-500"; // Ganti icon jadi kopi saat istirahat
+                    modeText.className = "text-xs font-bold text-orange-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500";
+                    display.className = "text-5xl font-bold text-orange-400 tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]";
+                    btnStart.className = "bg-orange-600 hover:bg-orange-500 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.6)]";
+                    btnReset.className = "bg-gray-800 hover:bg-gray-700 text-orange-400 rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300";
+                }
+            } else {
+                // TEMA DEFAULT (IDLE): Kembali ke Merah / Hijau berdasarkan status (terang/dark mode mengikuti sistem)
+                const isWork = isPomodoroWork;
+                const bColor = isWork ? 'border-red-500' : 'border-green-500';
+                const tColor = isWork ? 'text-red-500' : 'text-green-500';
+                const bgBtn = isWork ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600';
+                const iconClass = isWork ? 'ph-clock-countdown' : 'ph-coffee';
+
+                card.className = `card bg-white dark:bg-gray-800 border-t-4 ${bColor} text-center relative overflow-hidden transition-all duration-500`;
+                title.className = "text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2 transition-colors duration-500";
+                titleIcon.className = `ph-fill ${iconClass} ${tColor} transition-colors duration-500`;
+                modeText.className = `text-xs font-medium ${tColor} mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500`;
+                display.className = "text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-md";
+                btnStart.className = `${bgBtn} text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md`;
+                btnReset.className = "bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md";
+            }
+        }
+
         function updatePomodoroDisplay() {
             const display = document.getElementById('pomodoroDisplay');
             if(!display) return;
             const m = Math.floor(pomodoroTimeLeft / 60).toString().padStart(2, '0');
             const s = (pomodoroTimeLeft % 60).toString().padStart(2, '0');
             display.innerText = `${m}:${s}`;
+            
+            // Tambahan: Update judul tab browser dengan sisa waktu
+            document.title = `(${m}:${s}) Dashboard`;
         }
         function togglePomodoro() {
             const btnIcon = document.querySelector('#btnPomoStart i');
@@ -695,9 +747,12 @@
                 clearInterval(pomodoroTimer);
                 btnIcon.classList.replace('ph-pause', 'ph-play');
                 isPomodoroRunning = false;
+                updatePomodoroTheme(false); // Kembalikan tema ke asal saat dijeda
+                document.title = "Personal Dashboard"; // Kembalikan judul tab
             } else {
                 isPomodoroRunning = true;
                 btnIcon.classList.replace('ph-play', 'ph-pause');
+                updatePomodoroTheme(true); // Aktifkan Tema Fokus/Istirahat
                 pomodoroTimer = setInterval(() => {
                     if (pomodoroTimeLeft > 0) {
                         pomodoroTimeLeft--;
@@ -706,7 +761,9 @@
                         clearInterval(pomodoroTimer);
                         isPomodoroRunning = false;
                         btnIcon.classList.replace('ph-pause', 'ph-play');
-                        showAlert(`<span class="font-bold text-xl text-indigo-600">⏰ Waktu Habis!</span><br><br>Sesi ${isPomodoroWork ? 'Kerja/Fokus' : 'Istirahat'} Anda telah selesai.`);
+                        updatePomodoroTheme(false); // Kembalikan saat habis
+                        document.title = "Waktu Habis! - Dashboard";
+                        showAlert(`<span class="font-bold text-xl ${isPomodoroWork ? 'text-purple-600' : 'text-orange-600'}">⏰ Waktu Habis!</span><br><br>Sesi ${isPomodoroWork ? 'Kerja/Fokus' : 'Istirahat'} Anda telah selesai.`);
                     }
                 }, 1000);
             }
@@ -718,15 +775,22 @@
             if(btnIcon) btnIcon.classList.replace('ph-pause', 'ph-play');
             pomodoroTimeLeft = isPomodoroWork ? 25 * 60 : 5 * 60;
             updatePomodoroDisplay();
+            updatePomodoroTheme(false);
+            document.title = "Personal Dashboard";
         }
         function switchPomodoroMode(mins) {
             isPomodoroWork = (mins === 25);
             const modeText = document.getElementById('pomodoroModeText');
             if (modeText) {
                 modeText.innerText = isPomodoroWork ? "Waktu Kerja" : "Waktu Istirahat";
-                modeText.className = `text-xs font-medium mb-4 uppercase tracking-widest relative z-10 ${isPomodoroWork ? 'text-red-500' : 'text-green-500'}`;
             }
-            resetPomodoro();
+            // Mengubah Judul bagian atas saat beralih mode
+            const titleText = document.getElementById('pomodoroTitle');
+            if(titleText) {
+                 titleText.innerHTML = `<i id="pomodoroTitleIcon" class="ph-fill ${isPomodoroWork ? 'ph-clock-countdown text-red-500' : 'ph-coffee text-green-500'} transition-colors duration-500"></i> ${isPomodoroWork ? 'Mode Fokus' : 'Mode Rehat'}`;
+            }
+            
+            resetPomodoro(); // Reset akan memanggil updatePomodoroTheme(false) untuk memperbarui warna Merah/Hijau default
         }
 
         // Feature: Habit Tracker
