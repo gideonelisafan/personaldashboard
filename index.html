@@ -294,11 +294,34 @@
                     </form>
                     <div id="categoriesList" class="flex flex-wrap gap-2"></div>
                 </div>
+
+                <!-- Form Transfer Antar Sumber -->
+                <div class="card bg-blue-50 dark:bg-blue-900/20 border-t-4 border-blue-500">
+                    <h2 class="text-xl font-semibold mb-4 text-blue-600 dark:text-blue-400 flex items-center gap-2"><i class="ph-bold ph-arrows-left-right text-xl"></i> Transfer Dana</h2>
+                    <form id="transferForm" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4 items-center relative">
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-gray-500 uppercase">Dari Sumber</label>
+                                <select id="transferFrom" required class="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm"></select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-gray-500 uppercase">Ke Tujuan</label>
+                                <select id="transferTo" required class="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm"></select>
+                            </div>
+                            <!-- Arrow Icon between selects -->
+                            <div class="absolute left-1/2 top-[60%] -translate-x-1/2 -translate-y-1/2 bg-blue-100 dark:bg-blue-800 p-1 rounded-full text-blue-600 dark:text-blue-300 shadow-sm border border-blue-200 dark:border-blue-700 z-10 hidden sm:block">
+                                <i class="ph-bold ph-arrow-right"></i>
+                            </div>
+                        </div>
+                        <input type="number" id="transferAmount" required class="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm" placeholder="Nominal Transfer (Rp)">
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold transition shadow-sm text-sm">Proses Transfer</button>
+                    </form>
+                </div>
             </div>
             
             <div class="space-y-6">
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-green-500">
-                    <h2 class="text-xl font-semibold mb-4 text-green-600 dark:text-green-500">Catat Transaksi</h2>
+                    <h2 class="text-xl font-semibold mb-4 text-green-600 dark:text-green-500">Catat Transaksi Biasa</h2>
                     <form id="transactionForm" class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <select id="trxType" class="p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm"><option value="income">Masuk (+)</option><option value="expense">Keluar (-)</option></select>
@@ -1473,9 +1496,9 @@
             };
         }
 
-        const tForm = document.getElementById('taskForm');
-        if (tForm) {
-            tForm.addEventListener('submit', (e) => {
+        const taskFormElement = document.getElementById('taskForm');
+        if (taskFormElement) {
+            taskFormElement.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const text = document.getElementById('newTaskInput').value.trim();
                 const date = document.getElementById('newTaskDate').value || getFormatDate(new Date());
@@ -1536,15 +1559,27 @@
         function renderSources() {
             const list = document.getElementById('sourcesList');
             const select = document.getElementById('trxSource');
+            const tFrom = document.getElementById('transferFrom');
+            const tTo = document.getElementById('transferTo');
             
             if (list) {
                 list.innerHTML = sources.map(s => `<div class="bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 px-3 py-1 rounded-full text-xs font-bold border border-teal-200 dark:border-teal-800 flex items-center gap-2">${s} <button onclick="deleteSource('${s}')" class="text-teal-400 dark:text-teal-600 hover:text-red-500 dark:hover:text-red-400"><i class="ph ph-x-circle"></i></button></div>`).join('');
             }
             
+            const optionsHTML = sources.map(s => `<option value="${s}">${s}</option>`).join('');
+            
             if (select) {
                 const currentSourceVal = select.value;
-                select.innerHTML = sources.map(s => `<option value="${s}">${s}</option>`).join('');
+                select.innerHTML = optionsHTML;
                 if(sources.includes(currentSourceVal)) select.value = currentSourceVal;
+            }
+            if (tFrom) {
+                const val = tFrom.value; tFrom.innerHTML = optionsHTML; 
+                if(sources.includes(val)) tFrom.value = val;
+            }
+            if (tTo) {
+                const val = tTo.value; tTo.innerHTML = optionsHTML; 
+                if(sources.includes(val)) tTo.value = val; else if(sources.length > 1) tTo.value = sources[1]; // default to 2nd source
             }
 
             const filter = document.getElementById('balanceFilter');
@@ -1583,13 +1618,19 @@
             
             transactions.forEach(t => { 
                 const amt = Number(t.amount) || 0; 
+                const isTransfer = t.category === "Transfer" || t.desc.startsWith("[TRANSFER]");
                 
                 if(t.type === 'income') rawTotal += amt;
                 else rawTotal -= amt;
 
                 if(filterValue === 'all' || t.source === filterValue) {
-                    if(t.type === 'income') { total += amt; inc += amt; } 
-                    else { total -= amt; exp += amt; }
+                    if(t.type === 'income') { 
+                        total += amt; 
+                        if(!isTransfer) inc += amt; // Jangan hitung transfer ke pemasukan grafik
+                    } else { 
+                        total -= amt; 
+                        if(!isTransfer) exp += amt; // Jangan hitung transfer ke pengeluaran grafik
+                    }
                 }
             });
             
@@ -1614,15 +1655,23 @@
             const sortedItems = [...transactions].sort((a,b) => b.timestamp.localeCompare(a.timestamp));
             
             if (list) {
-                list.innerHTML = sortedItems.map(t => `
+                list.innerHTML = sortedItems.map(t => {
+                    const isTransfer = t.category === "Transfer" || t.desc.startsWith("[TRANSFER]");
+                    const iconClass = isTransfer ? "ph-arrows-left-right text-blue-500" : (t.type === 'income' ? "ph-arrow-down-left text-green-500" : "ph-arrow-up-right text-red-500");
+                    const amountColor = isTransfer ? "text-blue-600 dark:text-blue-400" : (t.type === 'income' ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400");
+                    
+                    return `
                     <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 flex justify-between items-center group transition">
-                        <div class="min-w-0 pr-2">
-                            <div class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${t.desc}</div>
-                            <div class="text-[10px] text-gray-500 dark:text-gray-400 uppercase">${t.source} • ${t.category}</div>
+                        <div class="flex items-center gap-3 min-w-0 pr-2">
+                            <div class="bg-gray-200 dark:bg-gray-600 p-2 rounded-full shrink-0"><i class="ph-bold ${iconClass}"></i></div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${t.desc}</div>
+                                <div class="text-[10px] text-gray-500 dark:text-gray-400 uppercase">${t.source} • ${t.category}</div>
+                            </div>
                         </div>
                         <div class="flex items-center gap-2 sm:gap-4 shrink-0">
                             <div class="text-right">
-                                <div class="font-bold text-sm ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">${t.type === 'income' ? '+' : '-'} ${formatRupiah(t.amount)}</div>
+                                <div class="font-bold text-sm ${amountColor}">${t.type === 'income' ? '+' : '-'} ${formatRupiah(t.amount)}</div>
                                 <div class="text-[9px] text-gray-400 dark:text-gray-500">${getReadableDate(t.timestamp)}</div>
                             </div>
                             <div class="flex flex-col sm:flex-row gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition">
@@ -1630,21 +1679,41 @@
                                 <button onclick="deleteTransaction('${t.id}')" class="text-red-500 hover:text-red-700 dark:text-red-400 p-1"><i class="ph-fill ph-trash text-lg"></i></button>
                             </div>
                         </div>
-                    </div>
-                `).join('') || '<p class="text-center text-xs text-gray-400 dark:text-gray-500 py-4 italic">Belum ada transaksi di riwayat.</p>';
+                    </div>`;
+                }).join('') || '<p class="text-center text-xs text-gray-400 dark:text-gray-500 py-4 italic">Belum ada transaksi di riwayat.</p>';
             }
+        }
 
-            if (dashTrx) {
-                dashTrx.innerHTML = sortedItems.slice(0, 5).map(t => `
-                    <div class="p-2 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center group transition">
-                        <div class="flex flex-col min-w-0 pr-2">
-                            <span class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">${t.desc}</span>
-                            <span class="text-[10px] text-gray-500 dark:text-gray-400">${t.source}</span>
-                        </div>
-                        <span class="text-sm font-bold shrink-0 ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">${t.type === 'income' ? '+' : '-'} ${formatRupiah(t.amount)}</span>
-                    </div>
-                `).join('') || '<p class="text-xs text-gray-400 dark:text-gray-500 py-2 italic">Belum ada transaksi.</p>';
-            }
+        // Feature: Transfer Antar Sumber
+        const transferFormElement = document.getElementById('transferForm');
+        if (transferFormElement) {
+            transferFormElement.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const fromSource = document.getElementById('transferFrom').value;
+                const toSource = document.getElementById('transferTo').value;
+                const amount = parseInt(document.getElementById('transferAmount').value) || 0;
+
+                if (fromSource === toSource) {
+                    showAlert("<span class='text-yellow-600 dark:text-yellow-400 font-bold'>Perhatian:</span> Sumber asal dan tujuan tidak boleh sama!");
+                    return;
+                }
+                if (amount <= 0) return;
+
+                const baseId = Date.now().toString();
+                const timestamp = new Date().toISOString();
+                
+                // Buat 2 catatan: Uang Keluar (Dari) dan Uang Masuk (Ke)
+                transactions.push({
+                    id: baseId + "_out", type: "expense", source: fromSource, category: "Transfer", amount: amount, desc: `[TRANSFER] Ke ${toSource}`, timestamp: timestamp
+                });
+                transactions.push({
+                    id: baseId + "_in", type: "income", source: toSource, category: "Transfer", amount: amount, desc: `[TRANSFER] Dari ${fromSource}`, timestamp: timestamp
+                });
+
+                localStorage.setItem('dashboard_transactions', JSON.stringify(transactions));
+                calculateBalance(); renderTransactions(); window.syncToCloud(); e.target.reset();
+                showAlert(`<span class='text-blue-600 dark:text-blue-400 font-bold'>Transfer Berhasil!</span><br><br>Dana sebesar ${formatRupiah(amount)} telah dipindahkan dari ${fromSource} ke ${toSource}.`);
+            });
         }
 
         // Feature: Export CSV
@@ -1680,7 +1749,8 @@
             const filterEl = document.getElementById('balanceFilter');
             const filterValue = filterEl ? filterEl.value : 'all';
             
-            transactions.filter(t => t.type === 'expense' && (filterValue === 'all' || t.source === filterValue))
+            // Filter kategori Transfer agar tidak muncul di chart pengeluaran murni
+            transactions.filter(t => t.type === 'expense' && t.category !== "Transfer" && !t.desc.startsWith("[TRANSFER]") && (filterValue === 'all' || t.source === filterValue))
                         .forEach(t => data[t.category] = (data[t.category] || 0) + t.amount);
             
             Chart.defaults.color = isDarkMode ? '#9ca3af' : '#6b7280'; // Adapt chart text color
