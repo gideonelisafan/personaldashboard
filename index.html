@@ -27,12 +27,14 @@
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .calendar-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 0.5rem; cursor: pointer; transition: all 0.2s; border-radius: 0.5rem; }
+        .calendar-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 0.2rem; cursor: pointer; transition: all 0.2s; border-radius: 0.5rem; position: relative; }
         .calendar-day:hover { background-color: rgba(156, 163, 175, 0.1); }
         .calendar-day.selected { border: 2px solid #3b82f6; font-weight: bold; color: #3b82f6; }
         .calendar-day.today { background-color: rgba(59, 130, 246, 0.1); font-weight: bold; }
         .calendar-day.empty { cursor: default; background-color: transparent; }
+        .calendar-day.holiday { color: #ef4444; font-weight: bold; background-color: rgba(239, 68, 68, 0.05); }
         .activity-dot { width: 6px; height: 6px; border-radius: 50%; background-color: #3b82f6; margin-top: 2px; }
+        .holiday-text { font-size: 8px; line-height: 1; text-align: center; color: #ef4444; position: absolute; bottom: 4px; left: 2px; right: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
@@ -57,11 +59,10 @@
     <header class="flex flex-col md:flex-row justify-between items-center mb-6 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm text-center md:text-left transition-colors">
         <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">✨ Personal Dashboard</h1>
-            <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Sistem Produktivitas Cerdas Anda</p>
+            <p id="dailyQuote" class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 italic font-medium">Sistem Produktivitas Cerdas Anda</p>
         </div>
         <div class="mt-4 md:mt-0 flex flex-col items-center md:items-end gap-2">
             <div class="flex items-center gap-3">
-                <!-- Status Google Sheets Sync -->
                 <div id="cloudStatus" class="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all">
                     <i id="cloudIcon" class="ph-bold ph-spinner animate-spin text-lg"></i> <span id="syncText">Menghubungkan...</span>
                 </div>
@@ -76,6 +77,10 @@
                     <i class="ph-fill ph-gear text-2xl"></i>
                 </button>
                 
+                <div id="weatherWidget" class="hidden sm:flex items-center gap-1 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-600">
+                    <i class="ph-bold ph-cloud-sun text-yellow-500 text-xl"></i> <span id="weatherTemp">--°C</span>
+                </div>
+
                 <div id="liveClock" class="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">00:00:00</div>
             </div>
             <div id="liveDate" class="text-xs sm:text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium">Memuat tanggal...</div>
@@ -88,13 +93,17 @@
             <i class="ph-fill ph-squares-four text-lg sm:text-xl"></i> Dashboard
         </button>
         <button onclick="switchTab('tugas')" id="btn-tab-tugas" class="flex-1 py-2.5 sm:py-3 px-2 sm:px-4 rounded-lg text-sm sm:text-base font-medium flex items-center justify-center gap-1.5 sm:gap-2 transition text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 whitespace-nowrap">
-            <i class="ph ph-check-square text-lg sm:text-xl"></i> Kelola Tugas
+            <i class="ph ph-check-square text-lg sm:text-xl"></i> Tugas
         </button>
         <button onclick="switchTab('waktu')" id="btn-tab-waktu" class="flex-1 py-2.5 sm:py-3 px-2 sm:px-4 rounded-lg text-sm sm:text-base font-medium flex items-center justify-center gap-1.5 sm:gap-2 transition text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 whitespace-nowrap">
-            <i class="ph ph-calendar text-lg sm:text-xl"></i> Kelola Waktu
+            <i class="ph ph-calendar text-lg sm:text-xl"></i> Waktu
         </button>
         <button onclick="switchTab('keuangan')" id="btn-tab-keuangan" class="flex-1 py-2.5 sm:py-3 px-2 sm:px-4 rounded-lg text-sm sm:text-base font-medium flex items-center justify-center gap-1.5 sm:gap-2 transition text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 whitespace-nowrap">
-            <i class="ph ph-wallet text-lg sm:text-xl"></i> Kelola Keuangan
+            <i class="ph ph-wallet text-lg sm:text-xl"></i> Keuangan
+        </button>
+        <!-- NEW TAB: Jurnal & Stats -->
+        <button onclick="switchTab('jurnal')" id="btn-tab-jurnal" class="flex-1 py-2.5 sm:py-3 px-2 sm:px-4 rounded-lg text-sm sm:text-base font-medium flex items-center justify-center gap-1.5 sm:gap-2 transition text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 whitespace-nowrap">
+            <i class="ph ph-book-open text-lg sm:text-xl"></i> Jurnal & Stats
         </button>
     </nav>
 
@@ -109,9 +118,13 @@
                 </div>
             </div>
             <div class="space-y-6">
-                <!-- Pomodoro Timer (Dipindah ke Dashboard & Ditambah Efek F1) -->
+                <!-- Pomodoro Timer -->
                 <div id="pomodoroCard" class="card bg-white dark:bg-gray-800 border-t-4 border-red-500 text-center relative overflow-hidden transition-all duration-500">
-                    <div class="absolute -right-4 -top-4 opacity-5"><i class="ph-fill ph-timer text-9xl"></i></div>
+                    <button onclick="toggleZenMode()" id="btnZenMode" class="absolute top-3 right-3 text-gray-400 hover:text-purple-500 transition-colors z-20" title="Layar Penuh (Zen Mode)">
+                        <i class="ph-bold ph-corners-out text-xl"></i>
+                    </button>
+                    
+                    <div class="absolute -right-4 -top-4 opacity-5 pointer-events-none"><i class="ph-fill ph-timer text-9xl"></i></div>
                     <h2 id="pomodoroTitle" class="text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2 transition-colors duration-500"><i id="pomodoroTitleIcon" class="ph-fill ph-clock-countdown text-red-500 transition-colors duration-500"></i> Mode Fokus</h2>
                     <p id="pomodoroModeText" class="text-xs font-medium text-red-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500">Waktu Kerja</p>
                     
@@ -127,6 +140,12 @@
                     </div>
                 </div>
 
+                <!-- Jadwal Terdekat -->
+                <div class="card bg-white dark:bg-gray-800 border-t-4 border-cyan-500">
+                    <h2 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-calendar-check text-cyan-500"></i> Jadwal Terdekat</h2>
+                    <div id="upcomingActivityContainer" class="space-y-3"></div>
+                </div>
+
                 <!-- Keuangan -->
                 <div class="card bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg border-0">
                     <h2 class="text-sm font-medium opacity-90 mb-2">Total Saldo</h2>
@@ -134,18 +153,13 @@
                     <button onclick="switchTab('keuangan')" class="w-full bg-white/20 hover:bg-white/30 transition py-2 rounded-lg text-xs font-medium">Detail Keuangan</button>
                 </div>
                 
-                <!-- NEW FEATURE: Catatan Cepat (Sticky Notes) -->
+                <!-- Catatan Cepat (Sticky Notes) -->
                 <div class="card bg-yellow-50 dark:bg-yellow-900/20 border-t-4 border-yellow-400">
                     <div class="flex justify-between items-center mb-2">
                         <h2 class="text-lg font-semibold flex items-center gap-2 text-yellow-800 dark:text-yellow-500"><i class="ph-fill ph-note"></i> Catatan Cepat</h2>
                         <i id="notesSavedIcon" class="ph-fill ph-check-circle text-green-500 hidden" title="Tersimpan"></i>
                     </div>
                     <textarea id="quickNotes" onblur="saveNotes()" class="w-full h-32 p-3 bg-transparent border border-yellow-200 dark:border-yellow-700/50 rounded-lg outline-none resize-none text-sm text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-yellow-400 placeholder-yellow-600/50 dark:placeholder-yellow-500/50" placeholder="Ketik ide, catatan meeting, atau nomor telepon di sini... (Otomatis tersimpan saat selesai mengetik)"></textarea>
-                </div>
-
-                <div class="card bg-white dark:bg-gray-800 border-t-4 border-orange-500">
-                    <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Tugas (3 Hari Kedepan)</h2>
-                    <div id="dashboardTaskList" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
                 </div>
             </div>
         </div>
@@ -155,7 +169,7 @@
     <div id="tab-tugas" class="tab-content">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div class="space-y-6">
-                <!-- NEW FEATURE: Habit Tracker -->
+                <!-- Habit Tracker -->
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-rose-500">
                     <h2 class="text-xl font-semibold mb-4 text-rose-600 flex items-center gap-2"><i class="ph-fill ph-flame"></i> Habit Tracker</h2>
                     <form id="habitForm" class="flex gap-2 mb-4">
@@ -178,7 +192,7 @@
             <div class="space-y-6">
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-blue-500">
                     <h2 class="text-xl font-semibold mb-4 text-blue-500">Daftar Tugas Pending</h2>
-                    <div id="pendingTaskList" class="space-y-2"></div>
+                    <div id="pendingTaskList" class="space-y-2 max-h-[400px] overflow-y-auto pr-2"></div>
                 </div>
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-green-500">
                     <div class="flex justify-between items-center mb-4">
@@ -191,11 +205,10 @@
         </div>
     </div>
 
-    <!-- Tab Waktu (Kalender & Pomodoro) -->
+    <!-- Tab Waktu (Kalender) -->
     <div id="tab-waktu" class="tab-content">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-1 space-y-6">
-                
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-blue-500">
                     <h2 class="text-xl font-semibold mb-4 text-blue-600 dark:text-blue-400">Input Kegiatan</h2>
                     <form id="activityForm" class="space-y-4">
@@ -264,7 +277,6 @@
                     </div>
                 </div>
 
-                <!-- Kelola Sumber Uang -->
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-teal-500">
                     <h2 class="text-xl font-semibold mb-4 text-teal-600 flex items-center gap-2"><i class="ph ph-wallet"></i> Kelola Sumber Uang</h2>
                     <form id="sourceForm" class="flex gap-2 mb-4">
@@ -274,7 +286,17 @@
                     <div id="sourcesList" class="flex flex-wrap gap-2"></div>
                 </div>
 
-                <!-- Form Transaksi -->
+                <div class="card bg-white dark:bg-gray-800 border-t-4 border-pink-500">
+                    <h2 class="text-xl font-semibold mb-4 text-pink-600 flex items-center gap-2"><i class="ph ph-tag"></i> Kelola Kategori</h2>
+                    <form id="categoryForm" class="flex gap-2 mb-4">
+                        <input type="text" id="newCategoryInput" required class="flex-1 p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm" placeholder="Contoh: Belanja, Cicilan">
+                        <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition">Tambah</button>
+                    </form>
+                    <div id="categoriesList" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+            
+            <div class="space-y-6">
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-green-500">
                     <h2 class="text-xl font-semibold mb-4 text-green-600 dark:text-green-500">Catat Transaksi</h2>
                     <form id="transactionForm" class="space-y-4">
@@ -282,29 +304,84 @@
                             <select id="trxType" class="p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm"><option value="income">Masuk (+)</option><option value="expense">Keluar (-)</option></select>
                             <select id="trxSource" required class="p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm"></select>
                         </div>
-                        <select id="trxCategory" class="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm">
-                            <option value="Makanan">🍔 Makanan</option><option value="Transport">🚗 Transport</option><option value="Gaji">💰 Gaji</option><option value="Lainnya">📦 Lainnya</option>
-                        </select>
+                        <select id="trxCategory" required class="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm"></select>
                         <input type="number" id="trxAmount" required class="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm" placeholder="Nominal Rp">
                         <input type="text" id="trxDesc" required class="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm" placeholder="Keterangan">
                         <button type="submit" id="btnSubmitTrx" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold transition">Simpan Transaksi</button>
                         <button type="button" id="btnCancelTrxEdit" class="hidden w-full bg-gray-400 hover:bg-gray-500 text-white py-2 rounded-lg font-bold mt-2 transition">Batal Edit</button>
                     </form>
                 </div>
-            </div>
-            <div class="space-y-6">
+                
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-yellow-500 h-64 flex justify-center items-center relative">
                     <canvas id="expenseChart"></canvas>
                 </div>
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-gray-700">
                     <div class="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">
                         <h2 class="font-bold text-gray-900 dark:text-white">Riwayat Transaksi</h2>
-                        <!-- NEW FEATURE: Export CSV -->
                         <button onclick="exportKeuanganCSV()" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded flex items-center gap-1 font-semibold transition">
                             <i class="ph-bold ph-download-simple"></i> Excel / CSV
                         </button>
                     </div>
                     <div id="fullTransactionList" class="space-y-3 max-h-[400px] overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW TAB: Jurnal & Stats (Productivity & Gamification) -->
+    <div id="tab-jurnal" class="tab-content">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <!-- Productivity Stats -->
+                <div class="card bg-white dark:bg-gray-800 border-t-4 border-purple-500">
+                    <h2 class="text-xl font-semibold mb-4 text-purple-600 flex items-center gap-2"><i class="ph-fill ph-chart-line-up"></i> Statistik Produktivitas</h2>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm mb-1 text-gray-700 dark:text-gray-300 font-medium">
+                            <span>Tugas Selesai</span>
+                            <span id="taskProgressText">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                            <div id="taskProgressBar" class="bg-purple-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1 text-right" id="taskSubText">0 dari 0 tugas</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 text-center mt-6">
+                        <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800/50">
+                            <i class="ph-fill ph-timer text-3xl text-purple-400 mb-2"></i>
+                            <h3 class="text-2xl font-bold text-purple-700 dark:text-purple-400" id="statPomodoro">0</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Total Sesi Fokus</p>
+                        </div>
+                        <div class="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800/50">
+                            <i class="ph-fill ph-fire text-3xl text-orange-400 mb-2"></i>
+                            <h3 class="text-2xl font-bold text-orange-700 dark:text-orange-400" id="statStreak">0 Hari</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Streak Habit Tertinggi</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gamification Badges -->
+                <div class="card bg-white dark:bg-gray-800 border-t-4 border-yellow-500">
+                    <h2 class="text-xl font-semibold mb-4 text-yellow-600 flex items-center gap-2"><i class="ph-fill ph-medal"></i> Etalase Pencapaian</h2>
+                    <div id="badgesContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <!-- Generated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Journal -->
+            <div class="card bg-white dark:bg-gray-800 border-t-4 border-blue-500 flex flex-col h-full">
+                <h2 class="text-xl font-semibold mb-2 text-blue-600 flex items-center gap-2"><i class="ph-fill ph-book-bookmark"></i> Jurnal Refleksi Harian</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Catat hal yang Anda syukuri atau pelajari hari ini.</p>
+                
+                <form id="journalForm" class="mb-6">
+                    <textarea id="newJournalInput" required class="w-full h-24 p-3 bg-blue-50/50 dark:bg-gray-700 border border-blue-100 dark:border-gray-600 rounded-lg outline-none resize-none text-sm text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-400 mb-2" placeholder="Hari ini saya merasa bersyukur karena..."></textarea>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition text-sm">Simpan Jurnal</button>
+                </form>
+
+                <div class="flex-1 overflow-y-auto pr-2 space-y-4" id="journalList">
+                    <!-- Journals here -->
                 </div>
             </div>
         </div>
@@ -318,7 +395,6 @@
                 <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><i class="ph-bold ph-x text-xl"></i></button>
             </div>
             <form id="settingsForm" onsubmit="saveSettings(event)">
-                <!-- Seksi PIN -->
                 <div class="mb-6">
                     <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 border-b border-gray-100 dark:border-gray-700 pb-1 flex items-center gap-2"><i class="ph-fill ph-lock-key text-blue-600"></i> Kunci Layar (PIN)</h4>
                     <div id="oldPinContainer" class="mb-3 hidden">
@@ -331,7 +407,6 @@
                         <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">Kosongkan jika ingin menghapus PIN keamanan.</p>
                     </div>
                 </div>
-
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition">Simpan Pengaturan</button>
             </form>
         </div>
@@ -360,6 +435,7 @@
         var activities = JSON.parse(localStorage.getItem('dashboard_activities')) || [];
         var transactions = JSON.parse(localStorage.getItem('dashboard_transactions')) || [];
         var sources = JSON.parse(localStorage.getItem('dashboard_sources')) || ['Dompet', 'ATM', 'Tabungan'];
+        var financeCategories = JSON.parse(localStorage.getItem('dashboard_categories')) || ['Makanan', 'Transport', 'Gaji', 'Lainnya'];
         var tasks = JSON.parse(localStorage.getItem('dashboard_tasks')) || [];
         
         // Settings Data
@@ -368,14 +444,17 @@
         var habits = JSON.parse(localStorage.getItem('dashboard_habits')) || [];
         var isDarkMode = JSON.parse(localStorage.getItem('dashboard_darkmode')) || false;
         
+        // New Data Arrays (Journal, Stats, Holidays)
+        var journals = JSON.parse(localStorage.getItem('dashboard_journals')) || [];
+        var stats = JSON.parse(localStorage.getItem('dashboard_stats')) || { pomodoroCount: 0 };
+        var holidays = JSON.parse(localStorage.getItem('dashboard_holidays')) || [];
+
         // Apply Dark Mode On Load
         if (isDarkMode) document.documentElement.classList.add('dark');
         
-        // Populate quick notes if element is ready
         const quickNotesEl = document.getElementById('quickNotes');
         if (quickNotesEl) quickNotesEl.value = notes;
 
-        // Trigger Auto-Sync to Spreadsheet
         window.syncToCloud = async () => { await syncToSpreadsheet(true); };
 
         let expenseChartInstance = null;
@@ -393,6 +472,43 @@
         let pomodoroTimeLeft = 25 * 60; 
         let isPomodoroRunning = false;
         let isPomodoroWork = true;
+        let isZenMode = false;
+
+        const quotes = [
+            "Lakukan yang terbaik di semua kesempatan yang kamu miliki.",
+            "Kesuksesan adalah hasil dari usaha kecil yang diulang setiap hari.",
+            "Fokus pada tujuanmu, jangan melihat ke arah yang tidak ingin kamu tuju.",
+            "Waktu adalah aset paling berharga. Gunakan dengan bijak.",
+            "Jangan menunggu waktu yang tepat, ciptakan waktu yang tepat.",
+            "Setiap hari adalah kesempatan baru untuk menjadi lebih baik.",
+            "Disiplin adalah jembatan antara tujuan dan pencapaian."
+        ];
+
+        // Fetch Weather Widget Data
+        async function fetchWeather() {
+            try {
+                const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-8.65&longitude=115.22&current_weather=true");
+                const data = await res.json();
+                const temp = Math.round(data.current_weather.temperature);
+                document.getElementById('weatherTemp').innerText = `${temp}°C`;
+            } catch (e) {
+                console.log("Weather fetch failed");
+            }
+        }
+
+        // Fetch Holidays API (Indonesia)
+        async function fetchHolidays(year) {
+            try {
+                const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/ID`);
+                if(res.ok) {
+                    holidays = await res.json();
+                    localStorage.setItem('dashboard_holidays', JSON.stringify(holidays));
+                    renderCalendar();
+                }
+            } catch (e) {
+                console.log("Holidays fetch failed");
+            }
+        }
 
         // Utils
         const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
@@ -421,11 +537,10 @@
                 if (dmIcon) dmIcon.classList.replace('ph-sun', 'ph-moon');
             }
             localStorage.setItem('dashboard_darkmode', isDarkMode);
-            if(expenseChartInstance) renderChart(); // redraw chart to match theme
+            if(expenseChartInstance) renderChart(); 
             window.syncToCloud();
         }
 
-        // Init Dark Mode Icon
         if (isDarkMode) {
             const dmIcon = document.getElementById('darkModeIcon');
             if (dmIcon) dmIcon.classList.replace('ph-moon', 'ph-sun');
@@ -513,7 +628,6 @@
                 showAlert("<span class='text-red-600 dark:text-red-400 font-bold'>Gagal:</span> PIN Lama yang Anda masukkan salah!");
                 return;
             }
-
             if (newPin && newPin.length !== 6 && newPin.length !== 0) {
                 showAlert("<span class='text-red-600 dark:text-red-400 font-bold'>Gagal:</span> PIN Baru wajib terdiri dari tepat 6 angka!");
                 return;
@@ -521,11 +635,8 @@
 
             userPin = newPin;
             localStorage.setItem('dashboard_pin', userPin);
-            
             closeSettingsModal();
             showAlert("<span class='text-green-600 dark:text-green-400 font-bold'>Berhasil:</span> Pengaturan berhasil disimpan ke Cloud.");
-            
-            // Akan otomatis mengirim "userPin" ke payload.settings.pin di fungsi syncToSpreadsheet
             window.syncToCloud(); 
         }
 
@@ -561,28 +672,15 @@
                 try {
                     data = JSON.parse(textData);
                 } catch (parseError) {
-                    console.log("Bukan JSON:", textData);
                     throw new Error("URL salah atau akses belum disetel 'Anyone'.");
                 }
 
-                // SANITIZER KETAT: Membuang semua format aneh Google Sheets 1899-12-30T...
-                const normDate = (d) => { 
-                    if (!d) return ""; 
-                    let s = String(d); 
-                    if(s.includes('T')) return s.split('T')[0]; 
-                    return s; 
-                };
+                const normDate = (d) => { if (!d) return ""; let s = String(d); if(s.includes('T')) return s.split('T')[0]; return s; };
                 const normTime = (t) => {
                     if (!t) return "00:00"; 
                     let s = String(t);
-                    if (s.includes('T') && s.includes('1899')) { 
-                        // Google sheets weird time parsing
-                        const parts = s.split('T')[1].split(':');
-                        return `${parts[0]}:${parts[1]}`;
-                    } else if (s.includes('T')) {
-                        const d = new Date(s); 
-                        if(!isNaN(d)) return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); 
-                    }
+                    if (s.includes('T') && s.includes('1899')) { const parts = s.split('T')[1].split(':'); return `${parts[0]}:${parts[1]}`; } 
+                    else if (s.includes('T')) { const d = new Date(s); if(!isNaN(d)) return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
                     return s;
                 };
 
@@ -593,19 +691,19 @@
                 if (data.sources) sources = data.sources;
                 if (data.habits) habits = data.habits;
                 
-                // Ambil Pengaturan (Termasuk Kunci Layar PIN) dari Spreadsheet
+                // Jurnal & Stats (Dari Apps Script baru)
+                if (data.journals) journals = data.journals.map(j => ({...j, id: String(j.id), date: normDate(j.date), text: String(j.text), timestamp: String(j.timestamp)}));
+                if (data.stats) stats = data.stats;
+                
                 if (data.settings) {
                     const s = data.settings;
                     if (s.notes !== undefined) { notes = s.notes; const qn = document.getElementById('quickNotes'); if (qn) qn.value = notes; localStorage.setItem('dashboard_notes', notes); }
-                    if (s.isDarkMode !== undefined) { isDarkMode = s.isDarkMode; localStorage.setItem('dashboard_darkmode', isDarkMode); toggleDarkMode(); toggleDarkMode(); /* Force refresh theme */ }
+                    if (s.isDarkMode !== undefined) { isDarkMode = s.isDarkMode; localStorage.setItem('dashboard_darkmode', isDarkMode); toggleDarkMode(); toggleDarkMode(); }
                     
-                    // Memuat PIN Kunci Layar
                     if (s.pin !== undefined) {
                         userPin = String(s.pin).trim(); 
                         localStorage.setItem('dashboard_pin', userPin);
                         const lScreen = document.getElementById('lockScreen');
-                        
-                        // Pastikan jika ada PIN ditarik dari Cloud, segera kunci layarnya jika belum terkunci
                         if (userPin && lScreen && lScreen.classList.contains('hidden')) {
                             lScreen.classList.replace('hidden', 'flex');
                             const unlockInput = document.getElementById('unlockPinInput');
@@ -614,19 +712,19 @@
                     }
                 }
 
-                // Simpan ke lokal
                 localStorage.setItem('dashboard_activities', JSON.stringify(activities));
                 localStorage.setItem('dashboard_transactions', JSON.stringify(transactions));
                 localStorage.setItem('dashboard_tasks', JSON.stringify(tasks));
                 localStorage.setItem('dashboard_sources', JSON.stringify(sources));
                 localStorage.setItem('dashboard_habits', JSON.stringify(habits));
+                localStorage.setItem('dashboard_journals', JSON.stringify(journals));
+                localStorage.setItem('dashboard_stats', JSON.stringify(stats));
                 
                 refreshAll();
                 updateStatus('Tersinkron', 'ph-cloud-check', 'text-blue-700', 'bg-blue-50');
                 if(isManual) showAlert("<span class='text-green-600 font-bold'>Sukses!</span> Data terbaru berhasil dimuat dari Google Spreadsheet.");
 
             } catch (e) { 
-                console.log("Offline mode active:", e.message);
                 updateStatus('Offline', 'ph-cloud-slash', 'text-gray-600', 'bg-gray-100');
                 if(isManual) showAlert(`<span class="text-red-600 font-bold">Gagal terhubung ke Spreadsheet!</span><br><br>${e.message}`);
             }
@@ -637,21 +735,12 @@
             
             updateStatus('Menyimpan...', 'ph-spinner animate-spin', 'text-yellow-600', 'bg-yellow-50');
             try {
-                // Di sinilah Kunci Layar (PIN) dan lainnya dipaketkan untuk dikirim ke Spreadsheet
                 const payload = { 
-                    activities, tasks, transactions, sources, habits,
-                    settings: { 
-                        pin: userPin,          // PIN dikirim
-                        notes: notes,          // Catatan Cepat dikirim
-                        isDarkMode: isDarkMode // Tema dikirim
-                    }
+                    activities, tasks, transactions, sources, habits, journals, stats,
+                    settings: { pin: userPin, notes: notes, isDarkMode: isDarkMode }
                 };
 
-                const response = await fetch(GOOGLE_SCRIPT_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify(payload) 
-                });
-                
+                const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 if (!response.ok) throw new Error("Jaringan gagal.");
                 const textData = await response.text();
                 try { JSON.parse(textData); } catch(err) { throw new Error("Akses ditolak oleh Google."); }
@@ -671,15 +760,18 @@
             localStorage.setItem('dashboard_notes', notes);
             window.syncToCloud();
             
-            // Show checkmark icon briefly
             const icon = document.getElementById('notesSavedIcon');
-            if (icon) {
-                icon.classList.remove('hidden');
-                setTimeout(() => icon.classList.add('hidden'), 2000);
-            }
+            if (icon) { icon.classList.remove('hidden'); setTimeout(() => icon.classList.add('hidden'), 2000); }
         }
 
-        // Feature: Pomodoro Timer & Dual Theme Logic
+        // Feature: Pomodoro Timer (No Audio)
+        function toggleZenMode() {
+            isZenMode = !isZenMode;
+            const icon = document.querySelector('#btnZenMode i');
+            if (icon) icon.className = isZenMode ? 'ph-bold ph-corners-in text-xl' : 'ph-bold ph-corners-out text-xl';
+            updatePomodoroTheme(isPomodoroRunning); 
+        }
+
         function updatePomodoroTheme(isRunning) {
             const card = document.getElementById('pomodoroCard');
             const title = document.getElementById('pomodoroTitle');
@@ -691,39 +783,38 @@
 
             if (!card) return;
 
+            const zenClasses = isZenMode ? " !fixed !inset-0 !z-[100] !rounded-none !h-screen !w-screen !m-0 flex flex-col justify-center items-center" : "";
+
             if (isRunning) {
                 if (isPomodoroWork) {
-                    // MODE FOKUS: Hitam Pekat dengan Cahaya Ungu Terang (F1 Theme)
-                    card.className = "card bg-gray-950 border-t-4 border-purple-500 text-center relative overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]";
+                    card.className = "card bg-gray-950 border-t-4 border-purple-500 text-center relative overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]" + zenClasses;
                     title.className = "text-lg font-bold mb-1 text-purple-400 relative z-10 flex justify-center items-center gap-2 transition-colors duration-500";
                     titleIcon.className = "ph-fill ph-clock-countdown text-purple-500 transition-colors duration-500";
                     modeText.className = "text-xs font-bold text-purple-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500";
-                    display.className = "text-5xl font-bold text-purple-400 tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]";
+                    display.className = "text-5xl font-bold text-purple-400 tracking-widest mb-4 relative z-10 transition-colors duration-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]";
                     btnStart.className = "bg-purple-600 hover:bg-purple-500 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.6)]";
                     btnReset.className = "bg-gray-800 hover:bg-gray-700 text-purple-400 rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300";
                 } else {
-                    // MODE ISTIRAHAT: Hitam Pekat dengan Cahaya Oranye
-                    card.className = "card bg-gray-950 border-t-4 border-orange-500 text-center relative overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]";
+                    card.className = "card bg-gray-950 border-t-4 border-orange-500 text-center relative overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]" + zenClasses;
                     title.className = "text-lg font-bold mb-1 text-orange-400 relative z-10 flex justify-center items-center gap-2 transition-colors duration-500";
-                    titleIcon.className = "ph-fill ph-coffee text-orange-500 transition-colors duration-500"; // Ganti icon jadi kopi saat istirahat
+                    titleIcon.className = "ph-fill ph-coffee text-orange-500 transition-colors duration-500";
                     modeText.className = "text-xs font-bold text-orange-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500";
-                    display.className = "text-5xl font-bold text-orange-400 tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]";
+                    display.className = "text-5xl font-bold text-orange-400 tracking-widest mb-4 relative z-10 transition-colors duration-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]";
                     btnStart.className = "bg-orange-600 hover:bg-orange-500 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.6)]";
                     btnReset.className = "bg-gray-800 hover:bg-gray-700 text-orange-400 rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300";
                 }
             } else {
-                // TEMA DEFAULT (IDLE): Kembali ke Merah / Hijau berdasarkan status (terang/dark mode mengikuti sistem)
                 const isWork = isPomodoroWork;
                 const bColor = isWork ? 'border-red-500' : 'border-green-500';
                 const tColor = isWork ? 'text-red-500' : 'text-green-500';
                 const bgBtn = isWork ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600';
                 const iconClass = isWork ? 'ph-clock-countdown' : 'ph-coffee';
 
-                card.className = `card bg-white dark:bg-gray-800 border-t-4 ${bColor} text-center relative overflow-hidden transition-all duration-500`;
+                card.className = `card bg-white dark:bg-gray-800 border-t-4 ${bColor} text-center relative overflow-hidden transition-all duration-500` + zenClasses;
                 title.className = "text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2 transition-colors duration-500";
                 titleIcon.className = `ph-fill ${iconClass} ${tColor} transition-colors duration-500`;
                 modeText.className = `text-xs font-medium ${tColor} mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500`;
-                display.className = "text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-md";
+                display.className = "text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-4 relative z-10 transition-colors duration-500 drop-shadow-md";
                 btnStart.className = `${bgBtn} text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md`;
                 btnReset.className = "bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md";
             }
@@ -735,10 +826,9 @@
             const m = Math.floor(pomodoroTimeLeft / 60).toString().padStart(2, '0');
             const s = (pomodoroTimeLeft % 60).toString().padStart(2, '0');
             display.innerText = `${m}:${s}`;
-            
-            // Tambahan: Update judul tab browser dengan sisa waktu
             document.title = `(${m}:${s}) Dashboard`;
         }
+
         function togglePomodoro() {
             const btnIcon = document.querySelector('#btnPomoStart i');
             if (!btnIcon) return;
@@ -747,12 +837,13 @@
                 clearInterval(pomodoroTimer);
                 btnIcon.classList.replace('ph-pause', 'ph-play');
                 isPomodoroRunning = false;
-                updatePomodoroTheme(false); // Kembalikan tema ke asal saat dijeda
-                document.title = "Personal Dashboard"; // Kembalikan judul tab
+                updatePomodoroTheme(false); 
+                document.title = "Personal Dashboard";
             } else {
                 isPomodoroRunning = true;
                 btnIcon.classList.replace('ph-play', 'ph-pause');
-                updatePomodoroTheme(true); // Aktifkan Tema Fokus/Istirahat
+                updatePomodoroTheme(true); 
+
                 pomodoroTimer = setInterval(() => {
                     if (pomodoroTimeLeft > 0) {
                         pomodoroTimeLeft--;
@@ -761,13 +852,23 @@
                         clearInterval(pomodoroTimer);
                         isPomodoroRunning = false;
                         btnIcon.classList.replace('ph-pause', 'ph-play');
-                        updatePomodoroTheme(false); // Kembalikan saat habis
+                        updatePomodoroTheme(false);
                         document.title = "Waktu Habis! - Dashboard";
+                        
+                        // Menambah statistik Pomodoro Selesai
+                        if (isPomodoroWork) {
+                            stats.pomodoroCount = (stats.pomodoroCount || 0) + 1;
+                            localStorage.setItem('dashboard_stats', JSON.stringify(stats));
+                            renderStatsAndBadges();
+                            window.syncToCloud();
+                        }
+                        
                         showAlert(`<span class="font-bold text-xl ${isPomodoroWork ? 'text-purple-600' : 'text-orange-600'}">⏰ Waktu Habis!</span><br><br>Sesi ${isPomodoroWork ? 'Kerja/Fokus' : 'Istirahat'} Anda telah selesai.`);
                     }
                 }, 1000);
             }
         }
+
         function resetPomodoro() {
             clearInterval(pomodoroTimer);
             isPomodoroRunning = false;
@@ -778,19 +879,16 @@
             updatePomodoroTheme(false);
             document.title = "Personal Dashboard";
         }
+
         function switchPomodoroMode(mins) {
             isPomodoroWork = (mins === 25);
             const modeText = document.getElementById('pomodoroModeText');
-            if (modeText) {
-                modeText.innerText = isPomodoroWork ? "Waktu Kerja" : "Waktu Istirahat";
-            }
-            // Mengubah Judul bagian atas saat beralih mode
-            const titleText = document.getElementById('pomodoroTitle');
-            if(titleText) {
-                 titleText.innerHTML = `<i id="pomodoroTitleIcon" class="ph-fill ${isPomodoroWork ? 'ph-clock-countdown text-red-500' : 'ph-coffee text-green-500'} transition-colors duration-500"></i> ${isPomodoroWork ? 'Mode Fokus' : 'Mode Rehat'}`;
-            }
+            if (modeText) modeText.innerText = isPomodoroWork ? "Waktu Kerja" : "Waktu Istirahat";
             
-            resetPomodoro(); // Reset akan memanggil updatePomodoroTheme(false) untuk memperbarui warna Merah/Hijau default
+            const titleText = document.getElementById('pomodoroTitle');
+            if(titleText) titleText.innerHTML = `<i id="pomodoroTitleIcon" class="ph-fill ${isPomodoroWork ? 'ph-clock-countdown text-red-500' : 'ph-coffee text-green-500'} transition-colors duration-500"></i> ${isPomodoroWork ? 'Mode Fokus' : 'Mode Rehat'}`;
+            
+            resetPomodoro(); 
         }
 
         // Feature: Habit Tracker
@@ -804,13 +902,8 @@
             const yesterdayStr = getFormatDate(yesterday);
 
             list.innerHTML = habits.map(h => {
-                // Determine if checked today
                 const isCheckedToday = h.lastDoneDate === todayStr;
-                
-                // Reset streak if missed yesterday and not done today
-                if (h.lastDoneDate !== todayStr && h.lastDoneDate !== yesterdayStr && h.streak > 0) {
-                    h.streak = 0; // Lost streak
-                }
+                if (h.lastDoneDate !== todayStr && h.lastDoneDate !== yesterdayStr && h.streak > 0) h.streak = 0; 
 
                 return `
                 <div class="p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex justify-between items-center group transition">
@@ -826,6 +919,7 @@
                     </div>
                 </div>`;
             }).join('') || '<p class="text-xs text-gray-400 dark:text-gray-500 italic">Belum ada rutinitas yang dilacak.</p>';
+            renderStatsAndBadges(); // Refresh max streak
         }
 
         const habitForm = document.getElementById('habitForm');
@@ -834,16 +928,9 @@
                 e.preventDefault();
                 const input = document.getElementById('newHabitInput');
                 if(!input) return;
-                
-                habits.push({
-                    id: Date.now().toString(),
-                    name: input.value.trim(),
-                    streak: 0,
-                    lastDoneDate: ""
-                });
+                habits.push({ id: Date.now().toString(), name: input.value.trim(), streak: 0, lastDoneDate: "" });
                 localStorage.setItem('dashboard_habits', JSON.stringify(habits));
-                input.value = "";
-                renderHabits(); window.syncToCloud();
+                input.value = ""; renderHabits(); window.syncToCloud();
             });
         }
 
@@ -851,22 +938,11 @@
             const todayStr = getFormatDate(new Date());
             const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = getFormatDate(yesterday);
-            
             const idx = habits.findIndex(h => h.id === id);
             if (idx === -1) return;
-
             const h = habits[idx];
-            if (h.lastDoneDate === todayStr) {
-                // Undo
-                h.lastDoneDate = yesterdayStr; // Fake rollback
-                h.streak = Math.max(0, h.streak - 1);
-            } else {
-                // Do today
-                if (h.lastDoneDate === yesterdayStr) h.streak += 1;
-                else h.streak = 1; // Start new streak
-                h.lastDoneDate = todayStr;
-            }
-            
+            if (h.lastDoneDate === todayStr) { h.lastDoneDate = yesterdayStr; h.streak = Math.max(0, h.streak - 1); } 
+            else { if (h.lastDoneDate === yesterdayStr) h.streak += 1; else h.streak = 1; h.lastDoneDate = todayStr; }
             localStorage.setItem('dashboard_habits', JSON.stringify(habits));
             renderHabits(); window.syncToCloud();
         }
@@ -877,6 +953,107 @@
                 localStorage.setItem('dashboard_habits', JSON.stringify(habits));
                 renderHabits(); window.syncToCloud();
             });
+        }
+
+        // Feature: Jurnal Harian
+        function renderJournals() {
+            const list = document.getElementById('journalList');
+            if(!list) return;
+            const sorted = [...journals].sort((a,b) => b.timestamp.localeCompare(a.timestamp));
+            list.innerHTML = sorted.map(j => `
+                <div class="p-3 bg-blue-50/50 dark:bg-gray-700/50 border border-blue-100 dark:border-gray-600 rounded-lg group">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">${getReadableDate(j.date)}</span>
+                        <button onclick="deleteJournal('${j.id}')" class="text-red-400 hover:text-red-600 opacity-100 md:opacity-0 group-hover:opacity-100 transition"><i class="ph-fill ph-trash text-sm"></i></button>
+                    </div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">${j.text}</p>
+                </div>
+            `).join('') || '<p class="text-xs text-gray-400 dark:text-gray-500 italic text-center py-4">Belum ada jurnal. Tulis sesuatu hari ini!</p>';
+        }
+
+        const jForm = document.getElementById('journalForm');
+        if (jForm) {
+            jForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('newJournalInput');
+                if(!input || !input.value.trim()) return;
+                journals.push({
+                    id: Date.now().toString(),
+                    date: getFormatDate(new Date()),
+                    text: input.value.trim(),
+                    timestamp: new Date().toISOString()
+                });
+                localStorage.setItem('dashboard_journals', JSON.stringify(journals));
+                input.value = ""; renderJournals(); window.syncToCloud();
+            });
+        }
+        
+        function deleteJournal(id) {
+            showConfirm("Hapus jurnal ini?", () => {
+                journals = journals.filter(j => j.id !== id);
+                localStorage.setItem('dashboard_journals', JSON.stringify(journals));
+                renderJournals(); window.syncToCloud();
+            });
+        }
+
+        // Feature: Productivity Stats & Badges
+        function renderStatsAndBadges() {
+            // Stats
+            const totalTasks = tasks.length;
+            const compTasks = tasks.filter(t => t.completed).length;
+            const progress = totalTasks === 0 ? 0 : Math.round((compTasks / totalTasks) * 100);
+            
+            const taskProgText = document.getElementById('taskProgressText');
+            const taskProgBar = document.getElementById('taskProgressBar');
+            const taskSubText = document.getElementById('taskSubText');
+            if(taskProgText) taskProgText.innerText = `${progress}%`;
+            if(taskProgBar) taskProgBar.style.width = `${progress}%`;
+            if(taskSubText) taskSubText.innerText = `${compTasks} dari ${totalTasks} tugas selesai`;
+
+            const statPomo = document.getElementById('statPomodoro');
+            if(statPomo) statPomo.innerText = stats.pomodoroCount || 0;
+
+            const maxStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
+            const statStrk = document.getElementById('statStreak');
+            if(statStrk) statStrk.innerText = `${maxStreak} Hari`;
+
+            // Badges Gamification Logic
+            const badgesContainer = document.getElementById('badgesContainer');
+            if(!badgesContainer) return;
+            
+            let badgesHTML = '';
+            const renderBadge = (icon, name, color, bg) => {
+                return `<div class="p-3 ${bg} border border-${color.split('-')[1]}-200 dark:border-${color.split('-')[1]}-800 rounded-xl flex flex-col items-center text-center justify-center gap-1 shadow-sm">
+                            <i class="ph-fill ${icon} text-3xl ${color}"></i>
+                            <span class="text-[10px] font-bold ${color} uppercase tracking-tight">${name}</span>
+                        </div>`;
+            };
+
+            const lockedBadge = (icon, name) => {
+                return `<div class="p-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex flex-col items-center text-center justify-center gap-1 opacity-50 grayscale">
+                            <i class="ph-fill ${icon} text-3xl text-gray-400"></i>
+                            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-tight"><i class="ph-bold ph-lock"></i> ${name}</span>
+                        </div>`;
+            };
+
+            // Cek Badges Pomodoro
+            if (stats.pomodoroCount >= 1) badgesHTML += renderBadge('ph-clock', 'Pemula Fokus', 'text-red-500', 'bg-red-50 dark:bg-red-900/20');
+            else badgesHTML += lockedBadge('ph-clock', 'Pemula Fokus');
+
+            if (stats.pomodoroCount >= 10) badgesHTML += renderBadge('ph-crown', 'Master Fokus', 'text-yellow-500', 'bg-yellow-50 dark:bg-yellow-900/20');
+            else badgesHTML += lockedBadge('ph-crown', '10 Pomodoro');
+
+            // Cek Badges Task / Habit
+            if (compTasks >= 10 || maxStreak >= 5) badgesHTML += renderBadge('ph-rocket-launch', 'Si Paling Rajin', 'text-blue-500', 'bg-blue-50 dark:bg-blue-900/20');
+            else badgesHTML += lockedBadge('ph-rocket-launch', 'Si Paling Rajin');
+
+            // Cek Saldo
+            let bal = 0;
+            transactions.forEach(t => { if(t.type === 'income') bal += Number(t.amount); else bal -= Number(t.amount); });
+            if (bal >= 10000000) badgesHTML += renderBadge('ph-diamond', 'Sultan', 'text-emerald-500', 'bg-emerald-50 dark:bg-emerald-900/20');
+            else badgesHTML += lockedBadge('ph-diamond', 'Sultan');
+
+            badgesContainer.innerHTML = badgesHTML;
         }
 
         // Tabs
@@ -895,6 +1072,7 @@
             if (activeBtn) activeBtn.classList.add('bg-blue-50', 'text-blue-700', 'dark:bg-blue-900/30', 'dark:text-blue-400');
             
             if (id === 'keuangan') setTimeout(renderChart, 100);
+            if (id === 'jurnal') setTimeout(renderStatsAndBadges, 100); // Trigger pie/bars animation refresh
             if (id === 'dashboard') setTimeout(() => {
                 const h = new Date().getHours().toString().padStart(2, '0');
                 const elH = document.getElementById(`hour-${h}`);
@@ -903,14 +1081,64 @@
         }
 
         function refreshAll() {
-            renderDashboardSchedules(); renderCalendar(); renderTasks(); renderHabits(); calculateBalance(); renderTransactions(); renderSources();
+            renderDashboardSchedules(); renderUpcomingActivity(); renderCalendar(); renderTasks(); renderHabits(); renderCategories(); calculateBalance(); renderTransactions(); renderSources(); renderJournals(); renderStatsAndBadges();
         }
 
         // TIMELINE 24h & DASHBOARD ACTIVITIES
+        function renderUpcomingActivity() {
+            const container = document.getElementById('upcomingActivityContainer');
+            if (!container) return;
+
+            const todayStr = getFormatDate(new Date());
+            const now = new Date();
+            const currentMins = now.getHours() * 60 + now.getMinutes();
+
+            const todayActivities = activities.filter(a => a.date === todayStr).map(act => {
+                const [sH, sM] = String(act.time || "00:00").split(':').map(Number);
+                const [eH, eM] = String(act.endTime || act.time).split(':').map(Number);
+                let startMins = (sH || 0) * 60 + (sM || 0);
+                let endMins = (eH || 0) * 60 + (eM || 0);
+                if (endMins <= startMins) endMins = startMins + 30; 
+                return { ...act, startMins, endMins };
+            }).sort((a, b) => a.startMins - b.startMins);
+
+            const ongoing = todayActivities.filter(a => currentMins >= a.startMins && currentMins < a.endMins);
+            const upcoming = todayActivities.filter(a => a.startMins > currentMins);
+
+            let html = '';
+            if (ongoing.length > 0) {
+                html += `<div><span class="text-[10px] font-bold text-green-500 uppercase tracking-widest flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Berlangsung</span>`;
+                ongoing.forEach(act => {
+                    html += `<div class="p-2.5 mt-1.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-lg flex flex-col gap-1">
+                        <div class="flex justify-between items-start">
+                            <span class="font-semibold text-green-800 dark:text-green-400 text-sm">${act.title}</span>
+                            ${getPriorityBadge(act.priority)}
+                        </div>
+                        <span class="text-xs font-bold text-green-700 dark:text-green-500"><i class="ph-bold ph-clock"></i> ${act.time} - ${act.endTime || act.time}</span>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+
+            if (upcoming.length > 0) {
+                const nextAct = upcoming[0]; 
+                html += `<div class="${ongoing.length > 0 ? 'mt-4' : ''}"><span class="text-[10px] font-bold text-cyan-500 uppercase tracking-widest">Selanjutnya</span>
+                    <div class="p-2.5 mt-1.5 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800/50 rounded-lg flex flex-col gap-1">
+                        <div class="flex justify-between items-start">
+                            <span class="font-medium text-cyan-800 dark:text-cyan-400 text-sm">${nextAct.title}</span>
+                            ${getPriorityBadge(nextAct.priority)}
+                        </div>
+                        <span class="text-xs font-bold text-cyan-700 dark:text-cyan-500"><i class="ph-bold ph-clock"></i> Dimulai jam ${nextAct.time}</span>
+                    </div>
+                </div>`;
+            }
+
+            if (!html) html = '<p class="text-xs text-gray-400 dark:text-gray-500 italic text-center py-2">Tidak ada jadwal terdekat hari ini. Waktunya bersantai!</p>';
+            container.innerHTML = html;
+        }
+
         function renderDashboardSchedules() {
             const container = document.getElementById('dashboardTodaySchedule');
-            const dashWeekly = document.getElementById('dashboardWeeklySchedule');
-            
             const todayStr = getFormatDate(new Date());
             const nowTimeStr = new Date().toLocaleTimeString('id-ID', {hour12: false}).slice(0,5);
             
@@ -919,15 +1147,11 @@
                 const [sH, sM] = timeStr.split(':').map(Number);
                 const endStr = String(act.endTime || timeStr);
                 let [eH, eM] = endStr.split(':').map(Number);
-                
                 let startMins = (sH || 0) * 60 + (sM || 0);
                 let endMins = (eH || 0) * 60 + (eM || 0);
                 if(endMins <= startMins) endMins = startMins + 30; 
-                
                 return { ...act, _startMins: startMins, _endMins: endMins };
-            });
-
-            todaySchedule.sort((a,b) => a._startMins - b._startMins);
+            }).sort((a,b) => a._startMins - b._startMins);
 
             let columns = [];
             todaySchedule.forEach(act => {
@@ -968,25 +1192,9 @@
             if (container) {
                 container.innerHTML = `<div class="relative h-[1440px] w-full">${grid}${events}${nowLine}</div>`;
             }
-
-            // Agenda 7 Hari
-            const limit = new Date(); limit.setDate(limit.getDate()+7);
-            const weekly = activities.filter(a => a.date > todayStr && a.date <= getFormatDate(limit)).sort((a,b) => a.date.localeCompare(b.date));
-            if (dashWeekly) {
-                dashWeekly.innerHTML = weekly.map(a => `<div class="p-2 bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 rounded flex justify-between items-center group text-gray-800 dark:text-gray-200">
-                    <div><b>${getReadableDate(a.date)}</b><br><span class="text-sm font-medium">${a.title}</span></div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs text-indigo-600 dark:text-indigo-300 font-bold bg-indigo-100 dark:bg-indigo-900/50 px-2 py-1 rounded">${a.time}</span>
-                        <div class="flex flex-col gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition">
-                            <button onclick="editActivity('${a.id}')" class="text-blue-500 dark:text-blue-400"><i class="ph-fill ph-pencil-simple"></i></button>
-                            <button onclick="deleteActivity('${a.id}')" class="text-red-500 dark:text-red-400"><i class="ph-fill ph-trash"></i></button>
-                        </div>
-                    </div>
-                </div>`).join('') || '<p class="italic text-gray-400 dark:text-gray-500 py-2">Tidak ada agenda mendatang.</p>';
-            }
         }
 
-        // CALENDAR & ACTIVITY FORM
+        // CALENDAR & ACTIVITY FORM (WITH HOLIDAYS)
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
             const header = document.getElementById('calendarMonthYear');
@@ -994,19 +1202,30 @@
 
             const monthNames = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
             header.innerText = `${monthNames[currentMonth]} ${currentYear}`;
-            grid.innerHTML = "";
+            
             const firstDay = new Date(currentYear, currentMonth, 1).getDay();
             const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
             const todayStr = getFormatDate(new Date());
 
             let gridHtml = "";
             for(let i=0; i<firstDay; i++) gridHtml += '<div class="calendar-day empty"></div>';
+            
             for(let d=1; d<=daysInMonth; d++) {
                 const dateStr = getFormatDate(new Date(currentYear, currentMonth, d));
                 const hasAct = activities.some(a => a.date === dateStr);
                 const isToday = dateStr === todayStr ? 'today' : '';
                 const isSelected = dateStr === selectedCalendarDate ? 'selected' : '';
-                gridHtml += `<div onclick="selectCalendarDate('${dateStr}')" class="calendar-day ${isToday} ${isSelected}"><span>${d}</span>${hasAct ? '<div class="activity-dot bg-indigo-500"></div>' : ''}</div>`;
+                
+                // Cari data libur
+                const holidayObj = holidays.find(h => h.date === dateStr);
+                const isHoliday = holidayObj ? 'holiday' : '';
+                const holidayLabel = holidayObj ? `<div class="holiday-text">${holidayObj.localName}</div>` : '';
+
+                gridHtml += `<div onclick="selectCalendarDate('${dateStr}')" class="calendar-day ${isToday} ${isSelected} ${isHoliday}">
+                                <span>${d}</span>
+                                ${hasAct ? '<div class="activity-dot bg-indigo-500"></div>' : ''}
+                                ${holidayLabel}
+                             </div>`;
             }
             grid.innerHTML = gridHtml;
             renderSelectedDateActivities(selectedCalendarDate);
@@ -1022,7 +1241,10 @@
             const titleEl = document.getElementById('selectedDateTitle');
             const listEl = document.getElementById('selectedDateActivities');
             
-            if (titleEl) titleEl.innerText = `Jadwal: ${getReadableDate(d)}`;
+            if (titleEl) {
+                const hol = holidays.find(h => h.date === d);
+                titleEl.innerHTML = `Jadwal: ${getReadableDate(d)} ${hol ? `<span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-2">${hol.localName}</span>` : ''}`;
+            }
             
             if (listEl) {
                 const acts = activities.filter(a => a.date === d).sort((a,b) => a.time.localeCompare(b.time));
@@ -1037,7 +1259,16 @@
             }
         }
         
-        function changeMonth(s) { currentMonth += s; if(currentMonth < 0) { currentMonth=11; currentYear--; } else if(currentMonth > 11) { currentMonth=0; currentYear++; } renderCalendar(); }
+        function changeMonth(s) { 
+            const oldYear = currentYear;
+            currentMonth += s; 
+            if(currentMonth < 0) { currentMonth=11; currentYear--; } 
+            else if(currentMonth > 11) { currentMonth=0; currentYear++; } 
+            
+            // Jika ganti tahun, fetch libur tahun tsb
+            if (oldYear !== currentYear) fetchHolidays(currentYear);
+            else renderCalendar(); 
+        }
         
         function deleteActivity(id) { 
             showConfirm("Hapus kegiatan ini?", () => {
@@ -1206,6 +1437,7 @@
             });
             
             if (dash && !dash.innerHTML) dash.innerHTML = '<p class="text-xs text-gray-400 dark:text-gray-500 text-center py-2 italic">Yeay! Tidak ada tugas mendesak.</p>';
+            renderStatsAndBadges(); // Refresh statistics on task change
         }
 
         function toggleTask(id) { const i = tasks.findIndex(t => t.id === id); tasks[i].completed = !tasks[i].completed; localStorage.setItem('dashboard_tasks', JSON.stringify(tasks)); renderTasks(); window.syncToCloud(); }
@@ -1264,7 +1496,43 @@
             });
         }
 
-        // FINANCE
+        // FINANCE & CATEGORIES
+        function renderCategories() {
+            const list = document.getElementById('categoriesList');
+            const select = document.getElementById('trxCategory');
+            
+            if (list) {
+                list.innerHTML = financeCategories.map(c => `<div class="bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400 px-3 py-1 rounded-full text-xs font-bold border border-pink-200 dark:border-pink-800 flex items-center gap-2">${c} <button onclick="deleteCategory('${c}')" class="text-pink-400 dark:text-pink-600 hover:text-red-500 dark:hover:text-red-400"><i class="ph ph-x-circle"></i></button></div>`).join('');
+            }
+            
+            if (select) {
+                const currentVal = select.value;
+                select.innerHTML = financeCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+                if(financeCategories.includes(currentVal)) select.value = currentVal;
+            }
+        }
+
+        const cForm = document.getElementById('categoryForm');
+        if (cForm) {
+            cForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const val = document.getElementById('newCategoryInput').value.trim();
+                if(val && !financeCategories.includes(val)) {
+                    financeCategories.push(val);
+                    localStorage.setItem('dashboard_categories', JSON.stringify(financeCategories));
+                    e.target.reset(); renderCategories();
+                }
+            });
+        }
+
+        function deleteCategory(c) {
+            showConfirm(`Hapus kategori "${c}"? Transaksi lama tetap aman.`, () => {
+                financeCategories = financeCategories.filter(x => x !== c);
+                localStorage.setItem('dashboard_categories', JSON.stringify(financeCategories));
+                renderCategories();
+            });
+        }
+
         function renderSources() {
             const list = document.getElementById('sourcesList');
             const select = document.getElementById('trxSource');
@@ -1498,18 +1766,29 @@
             const lockScreen = document.getElementById('lockScreen');
             if(userPin && lockScreen) lockScreen.classList.replace('hidden', 'flex');
             
+            // Set Daily Quote
+            const quoteEl = document.getElementById('dailyQuote');
+            if (quoteEl) {
+                const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+                quoteEl.innerText = `"${quotes[dayOfYear % quotes.length]}"`;
+            }
+
+            // Init Data
+            fetchWeather();
+            fetchHolidays(currentYear);
             refreshAll();
             loadFromSpreadsheet(); // Auto-load on open
             
             setInterval(() => {
                 const now = new Date();
                 const currentJamMenit = now.toLocaleTimeString('id-ID', { hour12: false }).slice(0,5);
-                const todayStr = getFormatDate(now);
 
                 const clk = document.getElementById('liveClock');
                 if(clk) clk.innerText = currentJamMenit + ":" + String(now.getSeconds()).padStart(2, '0');
                 const ld = document.getElementById('liveDate');
                 if(ld) ld.innerText = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                
+                if (now.getSeconds() === 0) renderUpcomingActivity(); // refresh schedule list every minute
             }, 1000);
             
             const newTaskDate = document.getElementById('newTaskDate');
