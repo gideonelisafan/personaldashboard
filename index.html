@@ -109,66 +109,86 @@
 
     <!-- Tab Dashboard -->
     <div id="tab-dashboard" class="tab-content active">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Timeline -->
-                <div class="card bg-white dark:bg-gray-800 border-t-4 border-indigo-500">
+        <!-- UBAH STRUKTUR GRID DARI 2 KOLOM (lg:grid-cols-3 dengan col-span-2) MENJADI 3 KOLOM MERATA (lg:grid-cols-3) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            
+            <!-- KOLOM 1: Timeline -->
+            <div class="space-y-6">
+                <div class="card bg-white dark:bg-gray-800 border-t-4 border-indigo-500 h-full">
                     <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white"><i class="ph ph-clock text-2xl text-indigo-500"></i> Timeline 24 Jam</h2>
                     <div id="dashboardTodaySchedule" class="max-h-[600px] overflow-y-auto pr-2 relative dark:text-gray-300"></div>
                 </div>
             </div>
-            <div class="space-y-6">
-                <!-- Pomodoro Timer + Daftar Tugas Mendasak -->
-                <div id="pomodoroCard" class="card bg-white dark:bg-gray-800 border-t-4 border-red-500 relative overflow-hidden transition-all duration-500">
+
+            <!-- KOLOM 2: Mode Fokus & Catatan Cepat -->
+            <div class="space-y-6 flex flex-col">
+                <!-- Pomodoro Timer -->
+                <div id="pomodoroCard" class="card bg-white dark:bg-gray-800 border-t-4 border-red-500 text-center relative overflow-hidden transition-all duration-500">
                     <button onclick="toggleZenMode()" id="btnZenMode" class="absolute top-3 right-3 text-gray-400 hover:text-purple-500 transition-colors z-20" title="Layar Penuh (Zen Mode)">
                         <i class="ph-bold ph-corners-out text-xl"></i>
                     </button>
                     
                     <div class="absolute -right-4 -top-4 opacity-5 pointer-events-none"><i class="ph-fill ph-timer text-9xl"></i></div>
+                    <h2 id="pomodoroTitle" class="text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2 transition-colors duration-500"><i id="pomodoroTitleIcon" class="ph-fill ph-clock-countdown text-red-500 transition-colors duration-500"></i> Mode Fokus</h2>
+                    <p id="pomodoroModeText" class="text-xs font-medium text-red-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500">Waktu Kerja</p>
                     
-                    <div class="text-center">
-                        <h2 id="pomodoroTitle" class="text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2 transition-colors duration-500"><i id="pomodoroTitleIcon" class="ph-fill ph-clock-countdown text-red-500 transition-colors duration-500"></i> Mode Fokus</h2>
-                        <p id="pomodoroModeText" class="text-xs font-medium text-red-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500">Waktu Kerja</p>
-                        
-                        <div id="pomodoroDisplay" class="text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-md">25:00</div>
-                        
-                        <div class="flex justify-center gap-3 relative z-10 mb-4">
-                            <button onclick="togglePomodoro()" id="btnPomoStart" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-fill ph-play text-2xl"></i></button>
-                            <button onclick="resetPomodoro()" id="btnPomoReset" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-bold ph-arrow-counter-clockwise text-xl"></i></button>
-                        </div>
-                        <div class="flex justify-center gap-2 text-xs relative z-10 mb-6">
-                            <button onclick="switchPomodoroMode(25)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 transition-colors">Kerja 25m</button>
-                            <button onclick="switchPomodoroMode(5)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 transition-colors">Rehat 5m</button>
+                    <div id="pomodoroDisplay" class="text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-4 relative z-10 transition-colors duration-500 drop-shadow-md">25:00</div>
+                    
+                    <!-- Ambient Sounds -->
+                    <div class="relative z-10 mb-6 flex justify-center">
+                        <div class="bg-gray-100 dark:bg-gray-700/50 p-1.5 rounded-lg inline-flex items-center gap-2 border border-gray-200 dark:border-gray-600">
+                            <i class="ph-fill ph-speaker-high text-gray-500 dark:text-gray-400 ml-1"></i>
+                            <select id="ambientSound" onchange="handleAmbientChange()" class="bg-transparent text-xs text-gray-700 dark:text-gray-300 outline-none cursor-pointer max-w-[140px]">
+                                <option value="">Tanpa Suara Bising</option>
+                                <option value="https://upload.wikimedia.org/wikipedia/commons/4/4b/Rain_on_a_tin_roof.ogg">🌧️ Hujan Rintik</option>
+                                <option value="https://upload.wikimedia.org/wikipedia/commons/d/d9/White_noise.ogg">☕ White Noise / Fokus</option>
+                                <option value="https://upload.wikimedia.org/wikipedia/commons/4/46/Campfire_burning.ogg">🔥 Api Unggun</option>
+                            </select>
                         </div>
                     </div>
 
-                    <!-- Daftar Tugas Mendasak (Hanya Muncul di Mode Biasa, disembunyikan saat Zen Mode) -->
-                    <div id="dashboardTaskContainer" class="border-t border-gray-100 dark:border-gray-700 pt-4 mt-2 relative z-10">
-                        <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2"><i class="ph-fill ph-push-pin text-orange-500"></i> Fokus Tugas Saat Ini</h3>
-                        <div id="dashboardTaskList" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
+                    <div class="flex justify-center gap-3 relative z-10 mb-4">
+                        <button onclick="togglePomodoro()" id="btnPomoStart" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-fill ph-play text-2xl"></i></button>
+                        <button onclick="resetPomodoro()" id="btnPomoReset" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-bold ph-arrow-counter-clockwise text-xl"></i></button>
+                    </div>
+                    <div class="flex justify-center gap-2 text-xs relative z-10">
+                        <button onclick="switchPomodoroMode(25)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 transition-colors">Kerja 25m</button>
+                        <button onclick="switchPomodoroMode(5)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 transition-colors">Rehat 5m</button>
                     </div>
                 </div>
 
+                <!-- Catatan Cepat (Sticky Notes) -->
+                <div class="card bg-yellow-50 dark:bg-yellow-900/20 border-t-4 border-yellow-400 flex-1 flex flex-col">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-lg font-semibold flex items-center gap-2 text-yellow-800 dark:text-yellow-500"><i class="ph-fill ph-note"></i> Catatan Cepat</h2>
+                        <i id="notesSavedIcon" class="ph-fill ph-check-circle text-green-500 hidden" title="Tersimpan"></i>
+                    </div>
+                    <textarea id="quickNotes" onblur="saveNotes()" class="w-full flex-1 min-h-[150px] p-3 bg-transparent border border-yellow-200 dark:border-yellow-700/50 rounded-lg outline-none resize-none text-sm text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-yellow-400 placeholder-yellow-600/50 dark:placeholder-yellow-500/50" placeholder="Ketik ide, catatan meeting, atau nomor telepon di sini... (Otomatis tersimpan saat selesai mengetik)"></textarea>
+                </div>
+            </div>
+
+            <!-- KOLOM 3: Notifikasi, Uang, & Tugas -->
+            <div class="space-y-6 flex flex-col">
                 <!-- Jadwal Terdekat -->
                 <div class="card bg-white dark:bg-gray-800 border-t-4 border-cyan-500">
                     <h2 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-calendar-check text-cyan-500"></i> Jadwal Terdekat</h2>
                     <div id="upcomingActivityContainer" class="space-y-3"></div>
                 </div>
 
-                <!-- Keuangan -->
+                <!-- Keuangan Ringkas -->
                 <div class="card bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg border-0">
-                    <h2 class="text-sm font-medium opacity-90 mb-2">Total Saldo</h2>
-                    <h1 id="dashboardTotalBalance" class="text-3xl font-bold mb-4">Rp 0</h1>
-                    <button onclick="switchTab('keuangan')" class="w-full bg-white/20 hover:bg-white/30 transition py-2 rounded-lg text-xs font-medium">Detail Keuangan</button>
+                    <h2 class="text-sm font-medium opacity-90 mb-2">Total Saldo Tab Keuangan</h2>
+                    <h1 id="dashboardTotalBalance" class="text-3xl font-bold mb-4 truncate">Rp 0</h1>
+                    <button onclick="switchTab('keuangan')" class="w-full bg-white/20 hover:bg-white/30 transition py-2 rounded-lg text-xs font-medium">Masuk ke Kelola Keuangan</button>
                 </div>
                 
-                <!-- Catatan Cepat (Sticky Notes) -->
-                <div class="card bg-yellow-50 dark:bg-yellow-900/20 border-t-4 border-yellow-400">
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-lg font-semibold flex items-center gap-2 text-yellow-800 dark:text-yellow-500"><i class="ph-fill ph-note"></i> Catatan Cepat</h2>
-                        <i id="notesSavedIcon" class="ph-fill ph-check-circle text-green-500 hidden" title="Tersimpan"></i>
+                <!-- Daftar Tugas Ringkas -->
+                <div class="card bg-white dark:bg-gray-800 border-t-4 border-orange-500 flex-1 flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-push-pin text-orange-500"></i> Tugas Terdekat</h2>
+                        <button onclick="switchTab('tugas')" class="text-[10px] text-orange-500 hover:underline">Lihat Semua</button>
                     </div>
-                    <textarea id="quickNotes" onblur="saveNotes()" class="w-full h-32 p-3 bg-transparent border border-yellow-200 dark:border-yellow-700/50 rounded-lg outline-none resize-none text-sm text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-yellow-400 placeholder-yellow-600/50 dark:placeholder-yellow-500/50" placeholder="Ketik ide, catatan meeting, atau nomor telepon di sini... (Otomatis tersimpan saat selesai mengetik)"></textarea>
+                    <div id="dashboardTaskList" class="space-y-2 overflow-y-auto pr-2 flex-1 max-h-[300px]"></div>
                 </div>
             </div>
         </div>
