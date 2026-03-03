@@ -109,6 +109,20 @@
 
     <!-- Tab Dashboard -->
     <div id="tab-dashboard" class="tab-content active">
+        
+        <!-- NEW FEATURE: AI Magic Input -->
+        <div class="card bg-gradient-to-r from-purple-600 to-indigo-600 text-white mb-6 md:mb-8 border-0 shadow-lg relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 opacity-10 pointer-events-none"><i class="ph-fill ph-magic-wand text-[120px]"></i></div>
+            <h2 class="text-lg font-bold mb-3 flex items-center gap-2 relative z-10"><i class="ph-fill ph-sparkle text-yellow-300 animate-pulse"></i> Asisten Input Ajaib (AI)</h2>
+            <div class="flex flex-col sm:flex-row gap-3 relative z-10">
+                <input type="text" id="aiMagicInput" onkeypress="if(event.key === 'Enter') processAIInput()" class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/60 outline-none focus:bg-white/20 focus:ring-2 focus:ring-yellow-300 transition text-sm" placeholder="Ketik perintah santai... (Cth: Besok jam 10 ada meeting bulanan, terus jajan kopi pakai gopay 25rb)">
+                <button onclick="processAIInput()" id="btnProcessAI" class="bg-yellow-400 hover:bg-yellow-300 text-purple-900 px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md sm:w-auto w-full text-sm">
+                    <i class="ph-bold ph-paper-plane-tilt"></i> Eksekusi
+                </button>
+            </div>
+            <p class="text-[10px] mt-2 text-purple-200 relative z-10">AI ditenagai oleh Gemini 2.5 Flash.</p>
+        </div>
+
         <!-- UBAH STRUKTUR GRID DARI 2 KOLOM (lg:grid-cols-3 dengan col-span-2) MENJADI 3 KOLOM MERATA (lg:grid-cols-3) -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             
@@ -434,6 +448,7 @@
                 <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><i class="ph-bold ph-x text-xl"></i></button>
             </div>
             <form id="settingsForm" onsubmit="saveSettings(event)">
+                
                 <div class="mb-6">
                     <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 border-b border-gray-100 dark:border-gray-700 pb-1 flex items-center gap-2"><i class="ph-fill ph-lock-key text-blue-600"></i> Kunci Layar (PIN)</h4>
                     <div id="oldPinContainer" class="mb-3 hidden">
@@ -674,8 +689,9 @@
 
             userPin = newPin;
             localStorage.setItem('dashboard_pin', userPin);
+
             closeSettingsModal();
-            showAlert("<span class='text-green-600 dark:text-green-400 font-bold'>Berhasil:</span> Pengaturan berhasil disimpan ke Cloud.");
+            showAlert("<span class='text-green-600 dark:text-green-400 font-bold'>Berhasil:</span> Pengaturan berhasil disimpan.");
             window.syncToCloud(); 
         }
 
@@ -802,6 +818,123 @@
             
             const icon = document.getElementById('notesSavedIcon');
             if (icon) { icon.classList.remove('hidden'); setTimeout(() => icon.classList.add('hidden'), 2000); }
+        }
+
+        // Feature: AI Magic Input (Gemini Integration)
+        async function processAIInput() {
+            const apiKey = "";
+            const inputEl = document.getElementById('aiMagicInput');
+            const text = inputEl ? inputEl.value.trim() : '';
+            if (!text) return;
+
+            const btn = document.getElementById('btnProcessAI');
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Memikirkan...';
+            btn.disabled = true;
+
+            const todayStr = getFormatDate(new Date());
+            
+            const systemPromptContent = `
+                Anda adalah asisten cerdas untuk aplikasi Personal Dashboard.
+                Tugas Anda adalah mengekstrak data jadwal (kegiatan), tugas (tasks), dan transaksi keuangan dari teks pengguna menjadi format JSON.
+                
+                Konteks Hari Ini: Tanggal ${todayStr}.
+                Daftar Kategori Keuangan Valid: ${financeCategories.join(', ')}.
+                Daftar Sumber Dana Valid: ${sources.join(', ')}.
+
+                Aturan ketat untuk JSON:
+                - Jika tidak ada data untuk suatu jenis, berikan array kosong [].
+                - format tanggal wajib "YYYY-MM-DD". Gunakan konteks hari ini untuk menerjemahkan "besok", "lusa", dsb.
+                - format waktu wajib "HH:MM".
+                - Jika ada uang keluar, type="expense". Jika masuk, type="income". Amount adalah angka bulat tanpa titik/koma.
+                - priority kegiatan bisa diisi: "low", "medium", "high".
+
+                Output WAJIB berupa objek JSON sesuai skema ini:
+                {
+                  "tasks": [ {"text": "nama tugas", "date": "YYYY-MM-DD"} ],
+                  "activities": [ {"title": "nama acara", "date": "YYYY-MM-DD", "time": "HH:MM", "endTime": "HH:MM", "priority": "low"} ],
+                  "transactions": [ {"type": "expense", "category": "Kategori", "amount": 10000, "desc": "beli barang", "source": "Sumber Dana"} ]
+                }
+            `;
+
+            try {
+                let response, data, retries = 5;
+                let delays = [1000, 2000, 4000, 8000, 16000];
+                let attempt = 0;
+                
+                while(attempt < retries) {
+                    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: text }] }],
+                            systemInstruction: { parts: [{ text: systemPromptContent }] },
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    });
+                    
+                    if (response.ok) break;
+                    attempt++;
+                    if (attempt === retries) throw new Error(`Server AI menolak: ${response.status}`);
+                    await new Promise(r => setTimeout(r, delays[attempt-1]));
+                }
+
+                data = await response.json();
+                const aiResultString = data.candidates[0].content.parts[0].text;
+                const aiData = JSON.parse(aiResultString);
+
+                let addedCount = 0;
+                let successMsg = "<b>✨ AI Berhasil Menganalisis!</b><br><br><ul class='list-disc pl-5 text-sm space-y-1 text-left'>";
+
+                // Memasukkan Tasks
+                if (aiData.tasks && aiData.tasks.length > 0) {
+                    aiData.tasks.forEach(t => {
+                        tasks.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), text: t.text, date: t.date || todayStr, completed: false, timestamp: new Date().toISOString() });
+                        successMsg += `<li><b>Tugas:</b> ${t.text} (${getReadableDate(t.date || todayStr)})</li>`;
+                        addedCount++;
+                    });
+                }
+
+                // Memasukkan Kegiatan
+                if (aiData.activities && aiData.activities.length > 0) {
+                    aiData.activities.forEach(a => {
+                        activities.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), title: a.title, date: a.date || todayStr, time: a.time || "08:00", endTime: a.endTime || a.time || "09:00", priority: a.priority || 'low' });
+                        successMsg += `<li><b>Kegiatan:</b> ${a.title} (${a.time})</li>`;
+                        addedCount++;
+                    });
+                }
+
+                // Memasukkan Transaksi
+                if (aiData.transactions && aiData.transactions.length > 0) {
+                    aiData.transactions.forEach(tx => {
+                        transactions.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), type: tx.type || "expense", source: tx.source || sources[0], category: tx.category || financeCategories[0], amount: Number(tx.amount) || 0, desc: tx.desc, timestamp: new Date().toISOString() });
+                        const jenisStr = tx.type === 'income' ? '+' : '-';
+                        successMsg += `<li><b>Keuangan:</b> ${tx.desc} (${jenisStr}Rp${tx.amount}) via ${tx.source || sources[0]}</li>`;
+                        addedCount++;
+                    });
+                }
+                successMsg += "</ul>";
+
+                if (addedCount > 0) {
+                    localStorage.setItem('dashboard_tasks', JSON.stringify(tasks));
+                    localStorage.setItem('dashboard_activities', JSON.stringify(activities));
+                    localStorage.setItem('dashboard_transactions', JSON.stringify(transactions));
+                    
+                    refreshAll();
+                    window.syncToCloud();
+                    if(inputEl) inputEl.value = '';
+                    showAlert(successMsg);
+                } else {
+                    showAlert("<span class='text-yellow-600 font-bold'>Info:</span> AI tidak menemukan perintah tugas, jadwal, atau keuangan yang jelas dalam kalimat Anda.");
+                }
+
+            } catch (err) {
+                console.error(err);
+                showAlert(`<span class='text-red-600 font-bold'>Error AI:</span> Gagal memproses permintaan. Pastikan koneksi lancar dan API Key valid.<br><br><span class="text-xs text-gray-500">${err.message}</span>`);
+            } finally {
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+            }
         }
 
         // Feature: Pomodoro Timer (No Audio)
