@@ -132,21 +132,8 @@
                     <h2 id="pomodoroTitle" class="text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2 transition-colors duration-500"><i id="pomodoroTitleIcon" class="ph-fill ph-clock-countdown text-red-500 transition-colors duration-500"></i> Mode Fokus</h2>
                     <p id="pomodoroModeText" class="text-xs font-medium text-red-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500">Waktu Kerja</p>
                     
-                    <div id="pomodoroDisplay" class="text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-4 relative z-10 transition-colors duration-500 drop-shadow-md">25:00</div>
+                    <div id="pomodoroDisplay" class="text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-md">25:00</div>
                     
-                    <!-- Ambient Sounds -->
-                    <div class="relative z-10 mb-6 flex justify-center">
-                        <div class="bg-gray-100 dark:bg-gray-700/50 p-1.5 rounded-lg inline-flex items-center gap-2 border border-gray-200 dark:border-gray-600">
-                            <i class="ph-fill ph-speaker-high text-gray-500 dark:text-gray-400 ml-1"></i>
-                            <select id="ambientSound" onchange="handleAmbientChange()" class="bg-transparent text-xs text-gray-700 dark:text-gray-300 outline-none cursor-pointer max-w-[140px]">
-                                <option value="">Tanpa Suara Bising</option>
-                                <option value="https://upload.wikimedia.org/wikipedia/commons/4/4b/Rain_on_a_tin_roof.ogg">🌧️ Hujan Rintik</option>
-                                <option value="https://upload.wikimedia.org/wikipedia/commons/d/d9/White_noise.ogg">☕ White Noise / Fokus</option>
-                                <option value="https://upload.wikimedia.org/wikipedia/commons/4/46/Campfire_burning.ogg">🔥 Api Unggun</option>
-                            </select>
-                        </div>
-                    </div>
-
                     <div class="flex justify-center gap-3 relative z-10 mb-4">
                         <button onclick="togglePomodoro()" id="btnPomoStart" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-fill ph-play text-2xl"></i></button>
                         <button onclick="resetPomodoro()" id="btnPomoReset" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-bold ph-arrow-counter-clockwise text-xl"></i></button>
