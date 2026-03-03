@@ -118,25 +118,34 @@
                 </div>
             </div>
             <div class="space-y-6">
-                <!-- Pomodoro Timer -->
-                <div id="pomodoroCard" class="card bg-white dark:bg-gray-800 border-t-4 border-red-500 text-center relative overflow-hidden transition-all duration-500">
+                <!-- Pomodoro Timer + Daftar Tugas Mendasak -->
+                <div id="pomodoroCard" class="card bg-white dark:bg-gray-800 border-t-4 border-red-500 relative overflow-hidden transition-all duration-500">
                     <button onclick="toggleZenMode()" id="btnZenMode" class="absolute top-3 right-3 text-gray-400 hover:text-purple-500 transition-colors z-20" title="Layar Penuh (Zen Mode)">
                         <i class="ph-bold ph-corners-out text-xl"></i>
                     </button>
                     
                     <div class="absolute -right-4 -top-4 opacity-5 pointer-events-none"><i class="ph-fill ph-timer text-9xl"></i></div>
-                    <h2 id="pomodoroTitle" class="text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2 transition-colors duration-500"><i id="pomodoroTitleIcon" class="ph-fill ph-clock-countdown text-red-500 transition-colors duration-500"></i> Mode Fokus</h2>
-                    <p id="pomodoroModeText" class="text-xs font-medium text-red-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500">Waktu Kerja</p>
                     
-                    <div id="pomodoroDisplay" class="text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-md">25:00</div>
-                    
-                    <div class="flex justify-center gap-3 relative z-10 mb-4">
-                        <button onclick="togglePomodoro()" id="btnPomoStart" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-fill ph-play text-2xl"></i></button>
-                        <button onclick="resetPomodoro()" id="btnPomoReset" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-bold ph-arrow-counter-clockwise text-xl"></i></button>
+                    <div class="text-center">
+                        <h2 id="pomodoroTitle" class="text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2 transition-colors duration-500"><i id="pomodoroTitleIcon" class="ph-fill ph-clock-countdown text-red-500 transition-colors duration-500"></i> Mode Fokus</h2>
+                        <p id="pomodoroModeText" class="text-xs font-medium text-red-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500">Waktu Kerja</p>
+                        
+                        <div id="pomodoroDisplay" class="text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-md">25:00</div>
+                        
+                        <div class="flex justify-center gap-3 relative z-10 mb-4">
+                            <button onclick="togglePomodoro()" id="btnPomoStart" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-fill ph-play text-2xl"></i></button>
+                            <button onclick="resetPomodoro()" id="btnPomoReset" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md"><i class="ph-bold ph-arrow-counter-clockwise text-xl"></i></button>
+                        </div>
+                        <div class="flex justify-center gap-2 text-xs relative z-10 mb-6">
+                            <button onclick="switchPomodoroMode(25)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 transition-colors">Kerja 25m</button>
+                            <button onclick="switchPomodoroMode(5)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 transition-colors">Rehat 5m</button>
+                        </div>
                     </div>
-                    <div class="flex justify-center gap-2 text-xs relative z-10">
-                        <button onclick="switchPomodoroMode(25)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 transition-colors">Kerja 25m</button>
-                        <button onclick="switchPomodoroMode(5)" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 transition-colors">Rehat 5m</button>
+
+                    <!-- Daftar Tugas Mendasak (Hanya Muncul di Mode Biasa, disembunyikan saat Zen Mode) -->
+                    <div id="dashboardTaskContainer" class="border-t border-gray-100 dark:border-gray-700 pt-4 mt-2 relative z-10">
+                        <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2"><i class="ph-fill ph-push-pin text-orange-500"></i> Fokus Tugas Saat Ini</h3>
+                        <div id="dashboardTaskList" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
                     </div>
                 </div>
 
@@ -803,26 +812,32 @@
             const display = document.getElementById('pomodoroDisplay');
             const btnStart = document.getElementById('btnPomoStart');
             const btnReset = document.getElementById('btnPomoReset');
+            const taskContainer = document.getElementById('dashboardTaskContainer');
 
             if (!card) return;
 
             const zenClasses = isZenMode ? " !fixed !inset-0 !z-[100] !rounded-none !h-screen !w-screen !m-0 flex flex-col justify-center items-center" : "";
+            
+            // Sembunyikan daftar tugas jika dalam Zen Mode agar tidak mendistraksi
+            if (taskContainer) {
+                taskContainer.style.display = isZenMode ? 'none' : 'block';
+            }
 
             if (isRunning) {
                 if (isPomodoroWork) {
-                    card.className = "card bg-gray-950 border-t-4 border-purple-500 text-center relative overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]" + zenClasses;
+                    card.className = "card bg-gray-950 border-t-4 border-purple-500 relative overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]" + zenClasses;
                     title.className = "text-lg font-bold mb-1 text-purple-400 relative z-10 flex justify-center items-center gap-2 transition-colors duration-500";
                     titleIcon.className = "ph-fill ph-clock-countdown text-purple-500 transition-colors duration-500";
-                    modeText.className = "text-xs font-bold text-purple-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500";
-                    display.className = "text-5xl font-bold text-purple-400 tracking-widest mb-4 relative z-10 transition-colors duration-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]";
+                    modeText.className = "text-xs font-bold text-purple-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500 text-center";
+                    display.className = "text-5xl font-bold text-purple-400 tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.8)] text-center";
                     btnStart.className = "bg-purple-600 hover:bg-purple-500 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.6)]";
                     btnReset.className = "bg-gray-800 hover:bg-gray-700 text-purple-400 rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300";
                 } else {
-                    card.className = "card bg-gray-950 border-t-4 border-orange-500 text-center relative overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]" + zenClasses;
+                    card.className = "card bg-gray-950 border-t-4 border-orange-500 relative overflow-hidden transition-all duration-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]" + zenClasses;
                     title.className = "text-lg font-bold mb-1 text-orange-400 relative z-10 flex justify-center items-center gap-2 transition-colors duration-500";
                     titleIcon.className = "ph-fill ph-coffee text-orange-500 transition-colors duration-500";
-                    modeText.className = "text-xs font-bold text-orange-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500";
-                    display.className = "text-5xl font-bold text-orange-400 tracking-widest mb-4 relative z-10 transition-colors duration-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]";
+                    modeText.className = "text-xs font-bold text-orange-500 mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500 text-center";
+                    display.className = "text-5xl font-bold text-orange-400 tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.8)] text-center";
                     btnStart.className = "bg-orange-600 hover:bg-orange-500 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.6)]";
                     btnReset.className = "bg-gray-800 hover:bg-gray-700 text-orange-400 rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300";
                 }
@@ -833,11 +848,11 @@
                 const bgBtn = isWork ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600';
                 const iconClass = isWork ? 'ph-clock-countdown' : 'ph-coffee';
 
-                card.className = `card bg-white dark:bg-gray-800 border-t-4 ${bColor} text-center relative overflow-hidden transition-all duration-500` + zenClasses;
+                card.className = `card bg-white dark:bg-gray-800 border-t-4 ${bColor} relative overflow-hidden transition-all duration-500` + zenClasses;
                 title.className = "text-lg font-bold mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-2 transition-colors duration-500";
                 titleIcon.className = `ph-fill ${iconClass} ${tColor} transition-colors duration-500`;
-                modeText.className = `text-xs font-medium ${tColor} mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500`;
-                display.className = "text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-4 relative z-10 transition-colors duration-500 drop-shadow-md";
+                modeText.className = `text-xs font-medium ${tColor} mb-4 uppercase tracking-widest relative z-10 transition-colors duration-500 text-center`;
+                display.className = "text-5xl font-bold text-gray-900 dark:text-white tracking-widest mb-6 relative z-10 transition-colors duration-500 drop-shadow-md text-center";
                 btnStart.className = `${bgBtn} text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md`;
                 btnReset.className = "bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-md";
             }
@@ -1435,7 +1450,18 @@
                     else dateBadge = `<span class="text-[10px] bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-1.5 py-0.5 rounded font-bold">${getReadableDate(t.date).split(' ').slice(0,2).join(' ')}</span>`;
                 }
 
-                const html = `<div class="p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex justify-between items-center group transition">
+                // Desain kartu tugas lebih padat untuk Dashboard
+                const dashHtml = `<div class="p-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg flex justify-between items-center group transition hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" onclick="toggleTask('${t.id}')">
+                    <div class="flex items-center gap-2 truncate flex-1">
+                        <i class="ph ph-circle text-gray-400 dark:text-gray-500 text-xl shrink-0 hover:text-green-500 transition-colors"></i>
+                        <span class="font-medium text-sm text-gray-800 dark:text-gray-200 truncate">${t.text}</span>
+                    </div>
+                    <div class="shrink-0 ml-2">
+                        ${dateBadge}
+                    </div>
+                </div>`;
+
+                const mainHtml = `<div class="p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg flex justify-between items-center group transition">
                     <div class="flex items-center gap-2 truncate cursor-pointer flex-1" onclick="toggleTask('${t.id}')">
                         <i class="ph ${t.completed ? 'ph-check-circle text-green-500' : 'ph-circle text-gray-400 dark:text-gray-500'} text-xl shrink-0"></i>
                         <span class="${t.completed ? 'line-through text-gray-400 dark:text-gray-500' : 'font-medium text-gray-800 dark:text-gray-200'} truncate">${t.text}</span>
@@ -1450,16 +1476,16 @@
                 </div>`;
                 
                 if (t.completed) {
-                    if (comp) comp.innerHTML += html;
+                    if (comp) comp.innerHTML += mainHtml;
                 } else {
-                    if (pending) pending.innerHTML += html;
+                    if (pending) pending.innerHTML += mainHtml;
                     if (t.date <= limitStr) {
-                        if (dash) dash.innerHTML += html;
+                        if (dash) dash.innerHTML += dashHtml;
                     }
                 }
             });
             
-            if (dash && !dash.innerHTML) dash.innerHTML = '<p class="text-xs text-gray-400 dark:text-gray-500 text-center py-2 italic">Yeay! Tidak ada tugas mendesak.</p>';
+            if (dash && !dash.innerHTML) dash.innerHTML = '<p class="text-xs text-gray-400 dark:text-gray-500 text-center py-2 italic">Semua tugas beres! Silakan fokus bekerja.</p>';
             renderStatsAndBadges(); // Refresh statistics on task change
         }
 
