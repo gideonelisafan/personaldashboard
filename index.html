@@ -394,7 +394,7 @@
                             <span id="taskProgressText">0%</span>
                         </div>
                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                            <div id="taskProgressBar" class="bg-purple-600 h-2.5 rounded-full" style="width: 0%"></div>
+                            <div id="taskProgressBar" class="bg-purple-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                         <p class="text-[10px] text-gray-400 mt-1 text-right" id="taskSubText">0 dari 0 tugas</p>
                     </div>
@@ -423,16 +423,16 @@
             </div>
 
             <!-- Daily Journal -->
-            <div class="card bg-white dark:bg-gray-800 border-t-4 border-blue-500 flex flex-col h-full">
+            <div class="card bg-white dark:bg-gray-800 border-t-4 border-blue-500 flex flex-col h-full lg:max-h-[600px]">
                 <h2 class="text-xl font-semibold mb-2 text-blue-600 flex items-center gap-2"><i class="ph-fill ph-book-bookmark"></i> Jurnal Refleksi Harian</h2>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Catat hal yang Anda syukuri atau pelajari hari ini.</p>
                 
-                <form id="journalForm" class="mb-6">
+                <form id="journalForm" class="mb-4 shrink-0">
                     <textarea id="newJournalInput" required class="w-full h-24 p-3 bg-blue-50/50 dark:bg-gray-700 border border-blue-100 dark:border-gray-600 rounded-lg outline-none resize-none text-sm text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-400 mb-2" placeholder="Hari ini saya merasa bersyukur karena..."></textarea>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition text-sm">Simpan Jurnal</button>
                 </form>
 
-                <div class="flex-1 overflow-y-auto pr-2 space-y-4" id="journalList">
+                <div class="flex-1 overflow-y-auto pr-2 space-y-3" id="journalList">
                     <!-- Journals here -->
                 </div>
             </div>
@@ -773,6 +773,7 @@
                 localStorage.setItem('dashboard_stats', JSON.stringify(stats));
                 
                 refreshAll();
+                renderJournals(); // <-- Menambahkan panggilan eksplisit untuk merender jurnal setelah data dimuat
                 updateStatus('Tersinkron', 'ph-cloud-check', 'text-blue-700', 'bg-blue-50');
                 if(isManual) showAlert("<span class='text-green-600 font-bold'>Sukses!</span> Data terbaru berhasil dimuat dari Google Spreadsheet.");
 
@@ -980,9 +981,9 @@
             renderStatsAndBadges(); // Refresh max streak
         }
 
-        const habitForm = document.getElementById('habitForm');
-        if (habitForm) {
-            habitForm.addEventListener('submit', (e) => {
+        const habitFormElement = document.getElementById('habitForm');
+        if (habitFormElement) {
+            habitFormElement.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const input = document.getElementById('newHabitInput');
                 if(!input) return;
@@ -1017,32 +1018,56 @@
         function renderJournals() {
             const list = document.getElementById('journalList');
             if(!list) return;
-            const sorted = [...journals].sort((a,b) => b.timestamp.localeCompare(a.timestamp));
+            
+            // Pastikan array journals valid sebelum di-sort
+            if (!Array.isArray(journals)) journals = [];
+
+            const sorted = [...journals].sort((a,b) => {
+                 const timeA = a.timestamp || "";
+                 const timeB = b.timestamp || "";
+                 return timeB.localeCompare(timeA);
+            });
+            
             list.innerHTML = sorted.map(j => `
-                <div class="p-3 bg-blue-50/50 dark:bg-gray-700/50 border border-blue-100 dark:border-gray-600 rounded-lg group">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">${getReadableDate(j.date)}</span>
-                        <button onclick="deleteJournal('${j.id}')" class="text-red-400 hover:text-red-600 opacity-100 md:opacity-0 group-hover:opacity-100 transition"><i class="ph-fill ph-trash text-sm"></i></button>
+                <div class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-xl group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
+                    <div class="flex justify-between items-start mb-2 pl-2">
+                        <div class="flex items-center gap-2">
+                            <i class="ph-fill ph-calendar-blank text-blue-500 text-sm"></i>
+                            <span class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">${getReadableDate(j.date)}</span>
+                        </div>
+                        <button onclick="deleteJournal('${j.id}')" class="text-red-400 hover:text-red-600 dark:hover:text-red-300 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity bg-red-50 dark:bg-red-900/30 p-1 rounded"><i class="ph-fill ph-trash text-sm"></i></button>
                     </div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">${j.text}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap pl-2 italic">"${j.text}"</p>
                 </div>
-            `).join('') || '<p class="text-xs text-gray-400 dark:text-gray-500 italic text-center py-4">Belum ada jurnal. Tulis sesuatu hari ini!</p>';
+            `).join('') || `
+                <div class="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500">
+                    <i class="ph-fill ph-notebook text-4xl mb-2 opacity-50"></i>
+                    <p class="text-xs italic text-center">Belum ada jurnal.<br>Tulis sesuatu yang bermakna hari ini!</p>
+                </div>
+            `;
         }
 
-        const jForm = document.getElementById('journalForm');
-        if (jForm) {
-            jForm.addEventListener('submit', (e) => {
+        const journalFormElement = document.getElementById('journalForm');
+        if (journalFormElement) {
+            journalFormElement.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const input = document.getElementById('newJournalInput');
                 if(!input || !input.value.trim()) return;
+                
+                if (!Array.isArray(journals)) journals = [];
+
                 journals.push({
                     id: Date.now().toString(),
                     date: getFormatDate(new Date()),
                     text: input.value.trim(),
                     timestamp: new Date().toISOString()
                 });
+                
                 localStorage.setItem('dashboard_journals', JSON.stringify(journals));
-                input.value = ""; renderJournals(); window.syncToCloud();
+                input.value = ""; 
+                renderJournals(); 
+                window.syncToCloud();
             });
         }
         
@@ -1050,7 +1075,8 @@
             showConfirm("Hapus jurnal ini?", () => {
                 journals = journals.filter(j => j.id !== id);
                 localStorage.setItem('dashboard_journals', JSON.stringify(journals));
-                renderJournals(); window.syncToCloud();
+                renderJournals(); 
+                window.syncToCloud();
             });
         }
 
