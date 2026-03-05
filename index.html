@@ -123,14 +123,13 @@
             <p class="text-[10px] mt-2 text-purple-200 relative z-10">Membutuhkan API Key Gemini yang disimpan di menu Pengaturan (⚙️).</p>
         </div>
 
-        <!-- UBAH STRUKTUR GRID DARI 2 KOLOM (lg:grid-cols-3 dengan col-span-2) MENJADI 3 KOLOM MERATA (lg:grid-cols-3) -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
             
             <!-- KOLOM 1: Timeline -->
-            <div class="h-full flex flex-col">
-                <div class="card bg-white dark:bg-gray-800 border-t-4 border-indigo-500 h-full flex flex-col mb-0">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white shrink-0"><i class="ph ph-clock text-2xl text-indigo-500"></i> Timeline 24 Jam</h2>
-                    <div id="dashboardTodaySchedule" class="flex-1 overflow-y-auto pr-2 relative dark:text-gray-300 min-h-[400px]"></div>
+            <div class="space-y-6">
+                <div class="card bg-white dark:bg-gray-800 border-t-4 border-indigo-500">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white shrink-0"><i class="ph ph-clock text-2xl text-indigo-500"></i> Timeline Hari Ini</h2>
+                    <div id="dashboardTodaySchedule" class="overflow-y-auto pr-2 relative dark:text-gray-300 h-[450px]"></div>
                 </div>
             </div>
 
