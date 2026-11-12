@@ -3,1430 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Dashboard</title>
-    <!-- Tailwind CSS with Dark Mode Config -->
+    <title>Generator Link Siswa</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
-    <!-- Fonts, Icons & Charts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        /* Card Styles */
-        .card { 
-            background: rgba(255, 255, 255, 0.95); 
-            border-radius: 1rem; 
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); 
-            padding: 1.25rem; 
-            transition: all 0.3s ease; 
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            display: flex; flex-direction: column;
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
         }
-        .dark .card { 
-            background: rgba(31, 41, 55, 0.95); 
-            border-color: rgba(55, 65, 81, 0.8); 
-        }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
-        
-        /* Tab Transitions */
-        .tab-content { display: none; animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Calendar Specifics */
-        .calendar-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; padding-top: 0.25rem; cursor: pointer; transition: all 0.2s; border-radius: 0.5rem; position: relative; font-size: 0.875rem; }
-        .calendar-day:hover { background-color: rgba(156, 163, 175, 0.15); }
-        .calendar-day.selected { border: 2px solid #3b82f6; font-weight: 700; color: #3b82f6; background-color: rgba(59, 130, 246, 0.05); }
-        .calendar-day.today { background-color: rgba(59, 130, 246, 0.1); font-weight: 700; color: #1d4ed8; }
-        .dark .calendar-day.today { color: #60a5fa; }
-        .calendar-day.empty { cursor: default; background-color: transparent; }
-        .calendar-day.holiday { color: #ef4444; font-weight: 600; background-color: rgba(239, 68, 68, 0.05); }
-        .holiday-text { font-size: 0.45rem; line-height: 1; text-align: center; color: #ef4444; position: absolute; bottom: 4px; left: 2px; right: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        
-        /* Gradient Background Theme */
-        .theme-bg { background-image: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 50%, #fae8ff 100%); background-attachment: fixed; }
-        .dark .theme-bg { background-image: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%); }
     </style>
 </head>
-<body class="theme-bg text-gray-800 dark:text-gray-100 antialiased p-3 sm:p-5 md:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-screen transition-colors duration-500">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-    <!-- MODALS & OVERLAYS -->
-    
-    <!-- Lock Screen -->
-    <div id="lockScreen" class="fixed inset-0 bg-gray-900/95 z-[100] hidden items-center justify-center backdrop-blur-md transition-opacity">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full mx-4 text-center border border-gray-100 dark:border-gray-700">
-            <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
-                <i class="ph-fill ph-lock-key text-3xl animate-pulse"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Dashboard Terkunci</h2>
-            <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Sistem terenkripsi. Masukkan 6 digit PIN.</p>
-            <input type="password" id="unlockPinInput" inputmode="numeric" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'');" class="w-full p-4 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-xl text-center text-4xl tracking-[0.4em] font-black focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none mb-4 transition-all" placeholder="••••••">
-            <button onclick="unlockDashboard()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30">Buka Kunci</button>
-            <p id="unlockError" class="text-red-500 text-sm mt-4 hidden font-medium bg-red-50 dark:bg-red-900/20 py-2 rounded-lg">PIN salah, silakan coba lagi.</p>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-100">
+        
+        <!-- Header -->
+        <div class="bg-blue-600 p-6 text-center">
+            <h1 class="text-2xl font-bold text-white">Portal Link Siswa</h1>
+            <p class="text-blue-100 mt-2 text-sm">Pilih kelas dan nama Anda untuk mendapatkan akses link.</p>
         </div>
-    </div>
 
-    <!-- Level Up Popup -->
-    <div id="levelUpPopup" class="fixed inset-0 hidden items-center justify-center bg-black/70 z-[110] backdrop-blur-sm transition-opacity">
-        <div class="bg-gradient-to-b from-white to-yellow-50 dark:from-gray-800 dark:to-gray-900 p-10 rounded-[2rem] text-center shadow-[0_0_50px_rgba(234,179,8,0.5)] animate-bounce border-4 border-yellow-400 mx-4 max-w-sm w-full relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 opacity-20"><i class="ph-fill ph-star text-9xl text-yellow-500"></i></div>
-            <i class="ph-fill ph-shooting-star text-7xl text-yellow-500 mb-4 drop-shadow-md"></i>
-            <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-500 mb-2">LEVEL UP!</h2>
-            <p class="text-lg text-gray-700 dark:text-gray-200 font-medium">Kamu berhasil mencapai</p>
-            <p class="text-3xl font-black text-orange-500 my-2">Level <span id="newLevel"></span></p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-4 font-medium uppercase tracking-widest">Terus tingkatkan produktivitasmu!</p>
-        </div>
-    </div>
-
-    <!-- Alert Modal -->
-    <div id="customModal" class="fixed inset-0 bg-gray-900/60 hidden items-center justify-center z-[60] backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl max-w-sm w-full mx-4 border border-gray-100 dark:border-gray-700">
-            <h3 class="text-xl font-bold mb-3 text-gray-900 dark:text-white flex items-center gap-2" id="modalTitle"><i class="ph-fill ph-info text-blue-500"></i> Pesan</h3>
-            <div class="text-gray-600 dark:text-gray-300 mb-6 text-sm whitespace-pre-wrap leading-relaxed" id="modalMessage"></div>
-            <div class="flex justify-end gap-3">
-                <button id="modalBtnCancel" class="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl hidden font-semibold transition-colors">Batal</button>
-                <button id="modalBtnConfirm" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors shadow-md">OK Mengerti</button>
+        <!-- Section: Form Input -->
+        <div id="form-section" class="p-8">
+            <div class="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded text-sm">
+                <strong>⚠️ Peringatan:</strong> Anda hanya dapat melakukan generate link <strong>satu kali</strong> pada perangkat ini. Pastikan nama yang dipilih sudah benar!
             </div>
-        </div>
-    </div>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[150] p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl max-w-sm w-full max-h-[90vh] overflow-y-auto no-scrollbar border border-gray-100 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-5 border-b border-gray-100 dark:border-gray-700 pb-3">
-                <h3 class="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-sliders"></i> Pengaturan</h3>
-                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-red-500 bg-gray-100 dark:bg-gray-700 p-1.5 rounded-lg transition-colors"><i class="ph-bold ph-x text-lg"></i></button>
-            </div>
-            
-            <form id="settingsForm" onsubmit="saveSettings(event)">
-                <!-- WHATSAPP CONFIG -->
-                <div class="mb-5 bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-100 dark:border-green-800/50">
-                    <h4 class="font-bold text-green-700 dark:text-green-400 mb-3 flex items-center gap-2"><i class="ph-fill ph-whatsapp-logo"></i> Pengingat WhatsApp</h4>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Token Fonnte API</label>
-                            <input type="password" id="fonnteTokenInput" class="w-full p-2.5 border border-green-200 dark:border-green-700 bg-white dark:bg-gray-900 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-green-400 text-sm font-mono" placeholder="Token dari fonnte.com">
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">No. WA Penerima</label>
-                                <input type="text" id="waNumberInput" class="w-full p-2.5 border border-green-200 dark:border-green-700 bg-white dark:bg-gray-900 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-green-400 text-sm" placeholder="08123...">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Jam Notif</label>
-                                <input type="time" id="reminderTimeInput" class="w-full p-2.5 border border-green-200 dark:border-green-700 bg-white dark:bg-gray-900 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-green-400 text-sm">
-                            </div>
-                        </div>
-                        <button type="button" onclick="sendWhatsAppReminder(false)" id="btnTestWA" class="w-full bg-green-100 hover:bg-green-200 text-green-700 dark:bg-green-900/30 dark:hover:bg-green-900/50 dark:text-green-400 font-bold py-2 rounded-lg text-xs transition-colors flex items-center justify-center gap-2 mt-1 shadow-sm"><i class="ph-bold ph-paper-plane-right"></i> Tes Kirim Pesan WA</button>
-                    </div>
+            <form id="generator-form" class="space-y-5">
+                <div>
+                    <label for="kelas" class="block text-sm font-semibold text-gray-700 mb-1">Kelas</label>
+                    <select id="kelas" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow bg-gray-50">
+                        <option value="" disabled selected>-- Pilih Kelas --</option>
+                        <option value="6A">Kelas 6A</option>
+                        <option value="6B">Kelas 6B</option>
+                    </select>
                 </div>
 
-                <!-- API KEY GEMINI -->
-                <div class="mb-5 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-100 dark:border-purple-800/50">
-                    <h4 class="font-bold text-purple-700 dark:text-purple-400 mb-3 flex items-center gap-2"><i class="ph-fill ph-magic-wand"></i> Konfigurasi AI</h4>
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">Google Gemini API Key</label>
-                        <input type="password" id="geminiKeyInput" class="w-full p-2.5 border border-purple-200 dark:border-purple-700 bg-white dark:bg-gray-900 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-purple-400 text-sm font-mono" placeholder="Boleh dikosongkan saat di sini...">
-                        <p class="text-[9px] text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">Dapatkan key gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-purple-600 hover:underline font-bold">Google AI Studio</a>.</p>
-                    </div>
+                <div>
+                    <label for="nama" class="block text-sm font-semibold text-gray-700 mb-1">Nama Siswa</label>
+                    <select id="nama" required disabled class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>
+                    </select>
                 </div>
 
-                <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50">
-                    <h4 class="font-bold text-blue-700 dark:text-blue-400 mb-3 flex items-center gap-2"><i class="ph-fill ph-lock-key"></i> Keamanan (PIN)</h4>
-                    <div id="oldPinContainer" class="mb-3 hidden">
-                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">PIN Lama</label>
-                        <input type="password" id="oldPinInput" inputmode="numeric" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'');" class="w-full p-2.5 border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-900 dark:text-white rounded-lg text-center tracking-[0.3em] font-bold outline-none focus:ring-2 focus:ring-blue-400" placeholder="••••••">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">PIN Baru (6 Angka)</label>
-                        <input type="password" id="newPinInput" inputmode="numeric" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'');" class="w-full p-2.5 border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-900 dark:text-white rounded-lg text-center tracking-[0.3em] font-bold outline-none focus:ring-2 focus:ring-blue-400" placeholder="Kosongkan jika dihapus">
-                    </div>
-                </div>
-                
-                <button type="submit" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-black py-3 rounded-xl transition-transform hover:scale-[1.02] shadow-lg">Simpan & Terapkan</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 mt-4 shadow-md">
+                    Dapatkan Link Saya
+                </button>
             </form>
         </div>
-    </div>
 
-    <!-- HEADER SECTION -->
-    <header class="flex flex-col xl:flex-row justify-between items-center mb-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-4 sm:p-5 rounded-2xl shadow-sm border border-white/50 dark:border-gray-700/50 gap-4 xl:gap-0">
-        <!-- Left: Logo & Player Stats -->
-        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full xl:w-auto text-center sm:text-left">
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight">✨ Dashboard<span class="text-blue-600 dark:text-blue-400">.</span></h1>
-                <p id="dailyQuote" class="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 italic font-medium">Memuat motivasi...</p>
+        <!-- Section: Result -->
+        <div id="result-section" class="p-8 hidden text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
             </div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Link Berhasil Dibuat!</h2>
+            <p class="text-gray-600 mb-6">Halo <strong id="res-nama" class="text-blue-600"></strong> dari kelas <strong id="res-kelas"></strong>. Ini adalah link unik Anda.</p>
             
-            <div class="hidden sm:block w-px h-12 bg-gray-200 dark:bg-gray-700"></div> <!-- Divider -->
-            
-            <div class="flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/50 p-2 sm:p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50 w-full sm:w-auto justify-center">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white shadow-lg shrink-0 border-2 border-white dark:border-gray-800 ring-2 ring-orange-200 dark:ring-orange-900/50">
-                    <i class="ph-fill ph-sword text-xl sm:text-2xl"></i>
-                </div>
-                <div class="text-left flex-1 min-w-[120px]">
-                    <p class="text-xs sm:text-sm font-black text-gray-800 dark:text-gray-200 uppercase tracking-wide">
-                        Level <span id="playerLevel" class="text-orange-500">1</span>
-                    </p>
-                    <div class="w-full bg-gray-200 dark:bg-gray-700 h-2 sm:h-2.5 rounded-full mt-1.5 overflow-hidden shadow-inner">
-                        <div id="xpBar" class="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 h-full rounded-full transition-all duration-700 ease-out" style="width:0%"></div>
-                    </div>
-                    <p class="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 mt-1 font-bold">
-                        XP <span id="playerXP">0 / 100</span>
-                    </p>
-                </div>
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-6 break-all">
+                <a id="res-link" href="#" target="_blank" class="text-blue-600 hover:text-blue-800 underline text-sm font-medium"></a>
             </div>
-        </div>
 
-        <!-- Right: Controls & Time -->
-        <div class="flex flex-col items-center xl:items-end gap-3 w-full xl:w-auto">
-            <div class="flex flex-wrap justify-center gap-2 sm:gap-3">
-                <div id="cloudStatus" class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all">
-                    <i id="cloudIcon" class="ph-bold ph-spinner animate-spin text-lg"></i> <span id="syncText">Sync...</span>
-                </div>
-                
-                <button onclick="loadFromSpreadsheet(true)" class="p-2 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 text-gray-600 hover:text-blue-600 dark:text-gray-300 rounded-xl transition-all shadow-sm border border-gray-100 dark:border-gray-600" title="Muat Ulang Data">
-                    <i class="ph-bold ph-arrows-clockwise text-xl"></i>
+            <div class="space-y-3">
+                <a id="res-btn-open" href="#" target="_blank" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-md">
+                    Buka Dokumen
+                </a>
+                <button id="btn-copy" type="button" class="block w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 border border-gray-300 rounded-lg transition-colors duration-200 shadow-sm">
+                    Salin Link
                 </button>
-                <button onclick="toggleDarkMode()" class="p-2 bg-white dark:bg-gray-700 hover:bg-indigo-50 dark:hover:bg-gray-600 text-gray-600 hover:text-indigo-600 dark:text-gray-300 rounded-xl transition-all shadow-sm border border-gray-100 dark:border-gray-600" title="Ubah Tema">
-                    <i id="darkModeIcon" class="ph-fill ph-moon text-xl"></i>
-                </button>
-                <button onclick="openSettingsModal()" class="p-2 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-xl transition-all shadow-sm border border-gray-100 dark:border-gray-600" title="Pengaturan">
-                    <i class="ph-fill ph-gear text-xl"></i>
-                </button>
-                
-                <div id="weatherWidget" class="hidden sm:flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 px-3 py-1.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-600">
-                    <i class="ph-fill ph-cloud-sun text-yellow-500 text-lg"></i> <span id="weatherTemp">--°C</span>
-                </div>
             </div>
             
-            <div class="text-center xl:text-right">
-                <div id="liveClock" class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 tracking-tight leading-none mb-1">00:00</div>
-                <div id="liveDate" class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Memuat...</div>
-            </div>
+            <p class="mt-6 text-xs text-gray-500 italic">Data akses Anda telah tersimpan di browser ini. Anda tidak dapat mengambil link milik orang lain dari perangkat ini.</p>
         </div>
-    </header>
 
-    <!-- NAVIGATION TABS -->
-    <nav class="flex overflow-x-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-sm mb-6 p-1.5 gap-1.5 no-scrollbar border border-white/50 dark:border-gray-700/50">
-        <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 whitespace-nowrap shadow-sm">
-            <i class="ph-fill ph-squares-four text-lg"></i> Overview
-        </button>
-        <button onclick="switchTab('tugas')" id="btn-tab-tugas" class="flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap">
-            <i class="ph-fill ph-list-checks text-lg"></i> Tugas & Habit
-        </button>
-        <button onclick="switchTab('waktu')" id="btn-tab-waktu" class="flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap">
-            <i class="ph-fill ph-calendar text-lg"></i> Kalender
-        </button>
-        <button onclick="switchTab('keuangan')" id="btn-tab-keuangan" class="flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap">
-            <i class="ph-fill ph-wallet text-lg"></i> Keuangan
-        </button>
-        <button onclick="switchTab('jurnal')" id="btn-tab-jurnal" class="flex-1 py-2.5 sm:py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap">
-            <i class="ph-fill ph-book-open text-lg"></i> Refleksi
-        </button>
-    </nav>
-
-    <!-- MAIN CONTENT AREA -->
-    
-    <!-- ==================== TAB: OVERVIEW (DASHBOARD) ==================== -->
-    <div id="tab-dashboard" class="tab-content active space-y-6">
-
-        <!-- ROW 2: The Main 3-Column Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            
-            <!-- COLUMN 1: Timeline -->
-            <div class="card !border-t-4 !border-t-indigo-500 h-[600px] flex flex-col">
-                <div class="flex justify-between items-center mb-4 shrink-0 border-b border-gray-100 dark:border-gray-700 pb-3">
-                    <h2 class="text-base font-bold flex items-center gap-2 text-gray-900 dark:text-white"><i class="ph-fill ph-clock text-indigo-500 text-xl"></i> Timeline Hari Ini</h2>
-                    <span class="text-[10px] bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 px-2 py-1 rounded font-bold uppercase" id="todayActivityCount">0 Jadwal</span>
-                </div>
-                <!-- Scrollable Area -->
-                <div id="dashboardTodaySchedule" class="flex-1 overflow-y-auto pr-2 relative text-sm dark:text-gray-300 no-scrollbar">
-                    <!-- Javascript Will Populate This -->
-                </div>
-            </div>
-
-            <!-- COLUMN 2: Gamification & Pomodoro -->
-            <div class="flex flex-col gap-6">
-                <!-- Pomodoro Timer -->
-                <div id="pomodoroCard" class="card !border-t-4 !border-t-red-500 text-center relative overflow-hidden transition-all duration-500 shadow-sm">
-                    <button onclick="toggleZenMode()" id="btnZenMode" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors z-20 bg-gray-100 dark:bg-gray-700 p-1.5 rounded-lg" title="Zen Mode">
-                        <i class="ph-bold ph-corners-out text-base"></i>
-                    </button>
-                    
-                    <div class="absolute -right-6 -top-6 opacity-5 pointer-events-none"><i class="ph-fill ph-timer text-9xl"></i></div>
-                    
-                    <h2 id="pomodoroTitle" class="text-sm font-black mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-1.5 transition-colors duration-500"><i id="pomodoroTitleIcon" class="ph-fill ph-clock-countdown text-red-500 text-lg transition-colors duration-500"></i> MODE FOKUS</h2>
-                    <p id="pomodoroModeText" class="text-[10px] font-bold text-red-500 mb-2 uppercase tracking-widest relative z-10 transition-colors duration-500 bg-red-50 dark:bg-red-900/20 inline-block px-2 py-0.5 rounded-full">Sesi Kerja</p>
-                    
-                    <div id="pomodoroDisplay" class="text-5xl font-black text-gray-900 dark:text-white tracking-widest mb-4 relative z-10 transition-colors duration-500 drop-shadow-sm tabular-nums">25:00</div>
-                    
-                    <div class="flex justify-center gap-3 relative z-10 mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
-                        <button onclick="togglePomodoro()" id="btnPomoStart" class="bg-red-500 hover:bg-red-600 text-white rounded-xl w-14 h-12 flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-red-500/30"><i class="ph-fill ph-play text-2xl"></i></button>
-                        <button onclick="resetPomodoro()" id="btnPomoReset" class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-xl w-12 h-12 flex items-center justify-center transition-all duration-300"><i class="ph-bold ph-arrow-counter-clockwise text-xl"></i></button>
-                    </div>
-                    
-                    <div class="flex justify-center gap-2 text-xs relative z-10 font-semibold">
-                        <button onclick="switchPomodoroMode(25)" class="flex-1 py-2 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900/50 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-300 transition-colors border border-gray-200 dark:border-gray-600">Kerja (25m)</button>
-                        <button onclick="switchPomodoroMode(5)" class="flex-1 py-2 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900/50 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-300 transition-colors border border-gray-200 dark:border-gray-600">Rehat (5m)</button>
-                    </div>
-                </div>
-
-                <!-- Daily Quest -->
-                <div class="card !bg-gradient-to-br from-emerald-400 to-teal-500 text-white !border-0 shadow-md relative overflow-hidden">
-                    <div class="absolute -right-4 -bottom-4 opacity-20 pointer-events-none"><i class="ph-fill ph-target text-7xl"></i></div>
-                    <div class="flex justify-between items-center mb-3 border-b border-white/20 pb-2 relative z-10">
-                        <h2 class="text-sm font-black flex items-center gap-2"><i class="ph-fill ph-check-square-offset text-lg text-yellow-300"></i> DAILY QUEST</h2>
-                        <span class="text-[10px] bg-black/20 px-2 py-1 rounded font-bold">Resets Daily</span>
-                    </div>
-                    <div id="dailyQuestContent" class="text-xs space-y-2 relative z-10 font-medium"></div>
-                </div>
-            </div>
-
-            <!-- COLUMN 3: Data Summaries (Finance & Tasks) -->
-            <div class="flex flex-col gap-6">
-                <!-- Mini Finance -->
-                <div class="card !bg-gradient-to-br from-blue-700 to-indigo-800 text-white shadow-md !border-0">
-                    <div class="flex justify-between items-start mb-2">
-                        <h2 class="text-xs font-semibold text-blue-200 uppercase tracking-widest">Total Saldo Kas</h2>
-                        <div class="p-1.5 bg-white/10 rounded-lg"><i class="ph-fill ph-wallet text-white"></i></div>
-                    </div>
-                    <h1 id="dashboardTotalBalance" class="text-3xl font-black mb-3 truncate drop-shadow-md">Rp 0</h1>
-                    <div class="grid grid-cols-2 gap-2 text-xs mt-2 border-t border-white/10 pt-3">
-                        <div><span class="text-blue-300 block text-[10px] uppercase">Pemasukan</span><span id="dashIncome" class="font-bold text-green-300">+ Rp0</span></div>
-                        <div><span class="text-blue-300 block text-[10px] uppercase">Pengeluaran</span><span id="dashExpense" class="font-bold text-red-300">- Rp0</span></div>
-                    </div>
-                </div>
-
-                <!-- Quick Tasks -->
-                <div class="card flex-1 flex flex-col !border-t-4 !border-t-orange-500 min-h-[300px]">
-                    <div class="flex justify-between items-center mb-3 border-b border-gray-100 dark:border-gray-700 pb-2 shrink-0">
-                        <h2 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-push-pin text-orange-500 text-lg"></i> Tugas Pending</h2>
-                        <button onclick="switchTab('tugas')" class="text-[10px] bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-1 rounded font-bold hover:bg-orange-200 transition">Lihat Semua</button>
-                    </div>
-                    <div id="dashboardTaskList" class="space-y-2 overflow-y-auto pr-1 flex-1 no-scrollbar text-sm"></div>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- ==================== TAB: TUGAS & HABIT ==================== -->
-    <div id="tab-tugas" class="tab-content">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="space-y-6">
-                <!-- Habit Tracker -->
-                <div class="card !border-t-4 !border-t-rose-500">
-                    <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-flame text-rose-500 text-xl"></i> Habit Tracker</h2>
-                    <form id="habitForm" class="flex gap-2 mb-5">
-                        <input type="text" id="newHabitInput" required class="flex-1 p-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-sm outline-none focus:ring-2 focus:ring-rose-400" placeholder="Ketik habit baru (Cth: Minum Air)">
-                        <button type="submit" class="bg-rose-500 hover:bg-rose-600 text-white px-5 rounded-xl font-bold text-sm transition-colors shadow-sm">Tambah</button>
-                    </form>
-                    <div id="habitList" class="space-y-2.5"></div>
-                </div>
-
-                <!-- Input Tugas -->
-                <div class="card !border-t-4 !border-t-orange-500 bg-orange-50/50 dark:bg-gray-800">
-                    <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Tambah / Edit Tugas</h2>
-                    <form id="taskForm" class="flex flex-col gap-3">
-                        <input type="text" id="newTaskInput" required class="w-full p-3 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl outline-none focus:ring-2 focus:ring-orange-400 text-sm font-medium" placeholder="Apa yang ingin kamu kerjakan?">
-                        <div class="flex gap-3">
-                            <input type="date" id="newTaskDate" required class="flex-1 p-3 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-400">
-                            <button type="submit" id="btnSubmitTask" class="bg-orange-500 hover:bg-orange-600 text-white px-6 rounded-xl font-bold text-sm transition-colors shadow-sm">Simpan</button>
-                        </div>
-                        <button type="button" id="btnCancelTaskEdit" class="hidden w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 py-2.5 rounded-xl font-bold text-sm transition-colors mt-1">Batal Edit</button>
-                    </form>
-                </div>
-            </div>
-            <div class="space-y-6">
-                <!-- List Pending -->
-                <div class="card !border-t-4 !border-t-blue-500 h-[400px] flex flex-col">
-                    <h2 class="text-lg font-bold mb-3 text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-3 shrink-0"><i class="ph-fill ph-clipboard-text text-blue-500 text-xl"></i> Tugas Belum Selesai</h2>
-                    <div id="pendingTaskList" class="flex-1 space-y-2 overflow-y-auto pr-2 no-scrollbar"></div>
-                </div>
-                <!-- List Done -->
-                <div class="card !border-t-4 !border-t-green-500 h-[300px] flex flex-col opacity-80 hover:opacity-100 transition-opacity">
-                    <div class="flex justify-between items-center mb-3 border-b border-gray-100 dark:border-gray-700 pb-3 shrink-0">
-                        <h2 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-check-circle text-green-500 text-xl"></i> Tugas Selesai</h2>
-                        <button onclick="clearCompletedTasks()" class="text-xs text-red-500 hover:text-red-600 font-semibold bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">Bersihkan</button>
-                    </div>
-                    <div id="completedTaskList" class="flex-1 space-y-2 overflow-y-auto pr-2 no-scrollbar"></div>
-                </div>
-            </div>
-        </div>
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300">
+        Link berhasil disalin!
     </div>
 
-    <!-- ==================== TAB: WAKTU / KALENDER ==================== -->
-    <div id="tab-waktu" class="tab-content">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            <div class="lg:col-span-1 space-y-6">
-                <!-- Form Kegiatan -->
-                <div class="card !border-t-4 !border-t-blue-500">
-                    <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-calendar-plus text-blue-500 text-xl"></i> Input Jadwal</h2>
-                    <form id="activityForm" class="space-y-4">
-                        <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Nama Kegiatan</label>
-                            <input type="text" id="actTitle" required class="w-full p-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-400" placeholder="Cth: Meeting Tim">
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div class="sm:col-span-3">
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Tanggal</label>
-                                <input type="date" id="actDate" required class="w-full p-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-400">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Mulai</label>
-                                <input type="time" id="actTime" required class="w-full p-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-400">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Selesai</label>
-                                <input type="time" id="actEndTime" required class="w-full p-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-400">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Prioritas</label>
-                                <select id="actPriority" class="w-full p-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-400">
-                                    <option value="low">Rendah</option>
-                                    <option value="medium">Sedang</option>
-                                    <option value="high">Tinggi</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Pengulangan (Opsional)</label>
-                            <select id="actRepeat" class="w-full p-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-400 mb-3">
-                                <option value="none">Tidak Berulang</option>
-                                <option value="daily">Harian</option>
-                                <option value="weekly">Mingguan</option>
-                                <option value="monthly">Bulanan</option>
-                            </select>
-                            <div id="repeatUntilContainer" class="hidden">
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Berulang Sampai</label>
-                                <input type="date" id="actRepeatUntil" class="w-full p-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-400">
-                            </div>
-                        </div>
-                        
-                        <button type="submit" id="btnSubmitAct" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition-colors shadow-md">Simpan Jadwal</button>
-                        <button type="button" id="btnCancelActEdit" class="hidden w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-bold mt-2 transition-colors">Batal Edit</button>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="lg:col-span-2 flex flex-col gap-6">
-                <!-- Widget Kalender -->
-                <div class="card">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 id="calendarMonthYear" class="text-xl font-black uppercase tracking-wider text-gray-900 dark:text-white">Bulan Tahun</h2>
-                        <div class="flex gap-2">
-                            <button onclick="changeMonth(-1)" class="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-gray-600 dark:text-gray-300 rounded-lg transition-colors"><i class="ph-bold ph-caret-left"></i></button>
-                            <button onclick="changeMonth(1)" class="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-gray-600 dark:text-gray-300 rounded-lg transition-colors"><i class="ph-bold ph-caret-right"></i></button>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] sm:text-xs mb-2 text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                        <div class="text-red-400">Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div class="text-blue-400">Sab</div>
-                    </div>
-                    <div id="calendarGrid" class="grid grid-cols-7 gap-1 sm:gap-2 dark:text-gray-200"></div>
-                </div>
-
-                <!-- List Kegiatan per Tanggal -->
-                <div class="card !border-t-4 !border-t-cyan-500 flex-1 min-h-[250px]">
-                    <h3 id="selectedDateTitle" class="text-base font-bold mb-4 text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 pb-2">Jadwal Tanggal...</h3>
-                    <div id="selectedDateActivities" class="space-y-2.5"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== TAB: KEUANGAN ==================== -->
-    <div id="tab-keuangan" class="tab-content">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            
-            <!-- Kolom Kiri: Input & Settings Keuangan -->
-            <div class="lg:col-span-1 space-y-6">
-                <!-- Form Transaksi Utama -->
-                <div class="card !border-t-4 !border-t-emerald-500">
-                    <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-receipt text-emerald-500 text-xl"></i> Catat Transaksi</h2>
-                    <form id="transactionForm" class="space-y-3.5">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Jenis</label>
-                                <select id="trxType" class="w-full p-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-400">
-                                    <option value="expense" class="text-red-500">Pengeluaran (-)</option>
-                                    <option value="income" class="text-green-500">Pemasukan (+)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Sumber</label>
-                                <select id="trxSource" required class="w-full p-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-400"></select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Kategori</label>
-                            <select id="trxCategory" required class="w-full p-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-400"></select>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Nominal (Rp)</label>
-                            <input type="number" id="trxAmount" required class="w-full p-3 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-lg font-black tracking-wider outline-none focus:ring-2 focus:ring-emerald-400" placeholder="0">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Keterangan</label>
-                            <input type="text" id="trxDesc" required class="w-full p-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-400" placeholder="Cth: Beli Kopi">
-                        </div>
-                        <button type="submit" id="btnSubmitTrx" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold transition-colors shadow-md mt-2">Simpan Transaksi</button>
-                        <button type="button" id="btnCancelTrxEdit" class="hidden w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 py-2.5 rounded-xl font-bold mt-2 transition-colors">Batal Edit</button>
-                    </form>
-                </div>
-
-                <!-- Form Transfer -->
-                <div class="card !border-t-4 !border-t-blue-500 bg-blue-50/30 dark:bg-gray-800">
-                    <h2 class="text-sm font-bold mb-3 text-blue-700 dark:text-blue-400 flex items-center gap-2 border-b border-gray-200 dark:border-gray-700 pb-2"><i class="ph-bold ph-arrows-left-right text-lg"></i> Pindah Dana</h2>
-                    <form id="transferForm" class="space-y-3">
-                        <div class="flex items-center gap-2">
-                            <select id="transferFrom" required class="w-full p-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-lg text-xs"></select>
-                            <i class="ph-bold ph-arrow-right text-gray-400 shrink-0"></i>
-                            <select id="transferTo" required class="w-full p-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-lg text-xs"></select>
-                        </div>
-                        <div class="flex gap-2">
-                            <input type="number" id="transferAmount" required class="flex-1 p-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white rounded-lg text-sm font-bold" placeholder="Nominal Rp">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-lg font-bold text-xs transition-colors shadow-sm">Kirim</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Pengaturan Kategori & Sumber -->
-                <div class="card bg-gray-50 dark:bg-gray-800/50">
-                    <div class="space-y-4">
-                        <div>
-                            <h3 class="text-xs font-bold text-gray-500 mb-2 uppercase">Kelola Sumber Uang</h3>
-                            <form id="sourceForm" class="flex gap-1.5 mb-2">
-                                <input type="text" id="newSourceInput" required class="flex-1 p-1.5 px-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded text-xs" placeholder="Bank Jago, Dompet...">
-                                <button type="submit" class="bg-teal-600 text-white px-2.5 rounded text-xs font-bold">+</button>
-                            </form>
-                            <div id="sourcesList" class="flex flex-wrap gap-1.5"></div>
-                        </div>
-                        <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
-                            <h3 class="text-xs font-bold text-gray-500 mb-2 uppercase">Kelola Kategori</h3>
-                            <form id="categoryForm" class="flex gap-1.5 mb-2">
-                                <input type="text" id="newCategoryInput" required class="flex-1 p-1.5 px-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded text-xs" placeholder="Makan, Transport...">
-                                <button type="submit" class="bg-pink-600 text-white px-2.5 rounded text-xs font-bold">+</button>
-                            </form>
-                            <div id="categoriesList" class="flex flex-wrap gap-1.5"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Kolom Kanan: Chart & History -->
-            <div class="lg:col-span-2 flex flex-col gap-6 h-full">
-                <!-- Summary Card -->
-                <div class="card !bg-gradient-to-r from-emerald-600 to-teal-700 text-white !border-0 shadow-lg shrink-0">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-                        <h2 class="text-lg font-black opacity-90"><i class="ph-fill ph-wallet text-xl align-middle"></i> Brankas Utama</h2>
-                        <select id="balanceFilter" class="bg-white/20 text-white border-0 rounded-lg text-xs p-1.5 font-bold outline-none cursor-pointer" onchange="calculateBalance()">
-                            <option value="all" class="text-gray-900">Gabungan Semua</option>
-                        </select>
-                    </div>
-                    
-                    <h1 id="totalBalance" class="text-4xl sm:text-5xl font-black mb-6 drop-shadow-md tabular-nums tracking-tight">Rp 0</h1>
-                    
-                    <div class="grid grid-cols-2 gap-3 sm:gap-4">
-                        <div class="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/10">
-                            <div class="flex items-center gap-1.5 text-green-200 mb-1 opacity-80"><i class="ph-bold ph-arrow-down-left"></i> <span class="text-[10px] font-bold uppercase tracking-widest">Pemasukan</span></div>
-                            <p id="totalIncome" class="font-bold text-lg sm:text-xl truncate">Rp 0</p>
-                        </div>
-                        <div class="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/10">
-                            <div class="flex items-center gap-1.5 text-red-200 mb-1 opacity-80"><i class="ph-bold ph-arrow-up-right"></i> <span class="text-[10px] font-bold uppercase tracking-widest">Pengeluaran</span></div>
-                            <p id="totalExpense" class="font-bold text-lg sm:text-xl truncate">Rp 0</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Chart Area -->
-                <div class="card shrink-0 h-48 sm:h-64 flex justify-center items-center relative py-2">
-                    <canvas id="expenseChart"></canvas>
-                </div>
-                
-                <!-- History List -->
-                <div class="card flex-1 min-h-[300px] flex flex-col mb-0">
-                    <div class="flex justify-between items-center mb-3 border-b border-gray-100 dark:border-gray-700 pb-3 shrink-0">
-                        <h2 class="font-bold text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-list-dashes text-gray-400"></i> Riwayat Lengkap</h2>
-                        <button onclick="exportKeuanganCSV()" class="text-[10px] bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold hover:bg-green-100 transition-colors">
-                            <i class="ph-bold ph-download-simple text-sm"></i> Download CSV
-                        </button>
-                    </div>
-                    <div id="fullTransactionList" class="flex-1 space-y-2 overflow-y-auto pr-2 no-scrollbar"></div>
-                </div>
-            </div>
-            
-        </div>
-    </div>
-
-    <!-- ==================== TAB: JURNAL & STATS ==================== -->
-    <div id="tab-jurnal" class="tab-content">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-            
-            <div class="space-y-6">
-                <!-- Statistik Gamifikasi -->
-                <div class="card !border-t-4 !border-t-purple-500">
-                    <h2 class="text-lg font-bold mb-4 text-purple-600 flex items-center gap-2"><i class="ph-fill ph-chart-polar text-xl"></i> Pusat Statistik</h2>
-                    
-                    <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 mb-5">
-                        <div class="flex justify-between text-sm mb-1.5 text-gray-800 dark:text-gray-200 font-bold">
-                            <span>Penyelesaian Tugas Hari Ini</span>
-                            <span id="taskProgressText" class="text-purple-600 dark:text-purple-400">0%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 shadow-inner overflow-hidden">
-                            <div id="taskProgressBar" class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full transition-all duration-700" style="width: 0%"></div>
-                        </div>
-                        <p class="text-[10px] text-gray-400 mt-1.5 font-medium" id="taskSubText">0 dari 0 tugas diselesaikan</p>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800/50 flex flex-col items-center">
-                            <div class="w-10 h-10 bg-purple-200 dark:bg-purple-800/50 rounded-full flex items-center justify-center mb-2"><i class="ph-fill ph-timer text-xl text-purple-600 dark:text-purple-400"></i></div>
-                            <h3 class="text-3xl font-black text-purple-700 dark:text-purple-300" id="statPomodoro">0</h3>
-                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Sesi Fokus</p>
-                        </div>
-                        <div class="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800/50 flex flex-col items-center">
-                            <div class="w-10 h-10 bg-orange-200 dark:bg-orange-800/50 rounded-full flex items-center justify-center mb-2"><i class="ph-fill ph-fire text-xl text-orange-600 dark:text-orange-400"></i></div>
-                            <h3 class="text-3xl font-black text-orange-700 dark:text-orange-300" id="statStreak">0</h3>
-                            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Max Streak</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Etalase Badge Besar -->
-                <div class="card !border-t-4 !border-t-yellow-400">
-                    <h2 class="text-lg font-bold mb-4 text-yellow-600 flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-2"><i class="ph-fill ph-medal text-xl"></i> Koleksi Pencapaian</h2>
-                    <div id="fullBadgeContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        <!-- Generated By JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Jurnal Refleksi -->
-            <div class="card !border-t-4 !border-t-blue-500 h-[600px] flex flex-col mb-0">
-                <div class="shrink-0 mb-4">
-                    <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-fill ph-book-bookmark text-blue-500 text-xl"></i> Jurnal Harian</h2>
-                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-medium">Tulis 1 hal yang kamu pelajari hari ini (+3 XP).</p>
-                </div>
-                
-                <form id="journalForm" class="mb-3 shrink-0">
-                    <textarea id="newJournalInput" required class="w-full h-24 p-3.5 bg-blue-50/30 dark:bg-gray-900/50 border border-blue-100 dark:border-gray-700 rounded-xl outline-none resize-none text-sm text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-800 transition-all placeholder-gray-400" placeholder="Hari ini saya merasa bersyukur karena..."></textarea>
-                    <div class="flex justify-end mt-2">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm flex items-center gap-2"><i class="ph-bold ph-paper-plane-right"></i> Simpan</button>
-                    </div>
-                </form>
-
-                <button type="button" onclick="aiJournalFeedback()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 mb-4 shadow-sm shrink-0"><i class="ph-fill ph-sparkle text-yellow-300"></i> ✨ Minta Pesan Motivasi AI</button>
-
-                <div class="flex-1 overflow-y-auto pr-2 space-y-3 no-scrollbar bg-gray-50/50 dark:bg-gray-900/20 p-2 rounded-xl border border-gray-100 dark:border-gray-800" id="journalList">
-                    <!-- Journals here -->
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- SCRIPT UTAMA APLIKASI -->
     <script>
-        // =========================================================
-        // URL GOOGLE APPS SCRIPT
-        // =========================================================
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwq4Om6B25TTWA-oeDNGQ51Xyo2xspOEX4KwvBTcn8FjvyHzQQl_7N-BqvhIbQD9g/exec";
-
-        // ===============================
-        // GLOBAL STATE & DATA INITIALIZATION
-        // ===============================
-        let activities = JSON.parse(localStorage.getItem('dashboard_activities')) || [];
-        let transactions = JSON.parse(localStorage.getItem('dashboard_transactions')) || [];
-        let sources = JSON.parse(localStorage.getItem('dashboard_sources')) || ['Dompet', 'ATM', 'Tabungan'];
-        let financeCategories = JSON.parse(localStorage.getItem('dashboard_categories')) || ['Makanan', 'Transport', 'Gaji', 'Lainnya'];
-        let tasks = JSON.parse(localStorage.getItem('dashboard_tasks')) || [];
-        
-        let userPin = localStorage.getItem('dashboard_pin') || '';
-        let notes = localStorage.getItem('dashboard_notes') || '';
-        let habits = JSON.parse(localStorage.getItem('dashboard_habits')) || [];
-        let isDarkMode = JSON.parse(localStorage.getItem('dashboard_darkmode')) || false;
-        let geminiApiKey = localStorage.getItem('dashboard_gemini_key') || '';
-        
-        let waNumber = localStorage.getItem('dashboard_wa_number') || '';
-        let fonnteToken = localStorage.getItem('dashboard_fonnte_token') || '';
-        let reminderTime = localStorage.getItem('dashboard_reminder_time') || '';
-
-        let journals = JSON.parse(localStorage.getItem('dashboard_journals')) || [];
-        let stats = JSON.parse(localStorage.getItem('dashboard_stats')) || { pomodoroCount: 0 };
-        let holidays = JSON.parse(localStorage.getItem('dashboard_holidays')) || [];
-
-        let playerData = JSON.parse(localStorage.getItem('dashboard_player')) || {
-            xp: 0, level: 1, badges: [],
-            dailyQuest: { tasks: 0, pomodoro: 0, journal: 0, completed: false, date: new Date().toDateString() }
-        };
-
-        // App Status variables
-        let expenseChartInstance = null;
-        let currentDate = new Date();
-        let currentMonth = currentDate.getMonth();
-        let currentYear = currentDate.getFullYear();
-        let selectedCalendarDate = new Date().toISOString().split('T')[0];
-        let editingTrxId = null, editingActivityId = null, editingTaskId = null;
-        
-        let pomodoroTimer, pomodoroTimeLeft = 25 * 60; 
-        let isPomodoroRunning = false, isPomodoroWork = true, isZenMode = false;
-
-        const quotes = [
-            "Masa depan diciptakan oleh apa yang kamu lakukan hari ini, bukan besok.",
-            "Lakukan yang terbaik. Hasil yang baik akan mengikuti.",
-            "Sukses adalah kumpulan usaha kecil yang diulang setiap hari.",
-            "Waktu adalah aset paling berharga. Jangan disia-siakan.",
-            "Disiplin adalah jembatan antara tujuan dan pencapaian."
+        // Data Mentah dari Prompt (Nama dan Link sudah disesuaikan berurutan)
+        const names6A = [
+            "Air Balakosa", "Albert Christhopper Prilia Hartawan", "Amazing Kasih Palada", "Amelsera Gloria Esterlita Fredrick", "Andrew Ryu Cendra", "Bellvania Achazia Andrina Ludji", "Clarisse Jadeite Bellvania Lonata", "Deven Timothy Kiuk", "Esther Violette Sharon Hendrawan", "Jonathan Indra Kusuma", "Kinanthi Reandra Abigail Budyono", "Manuel Garcia Ririhena", "Matthew Cristano Chandra", "Moses Prabowo", "Rise Shelby Misacious", "Una Tiana Ong", "Vygotsky Jananta Salmun Ruku", "Yosua Tampubolon", "Zooey Gabriella Crawfurd"
         ];
+        const links6A = "https://docs.google.com/spreadsheets/d/11Mj__cyt3cxTKDPRhc_jXHojWDNH4TQV/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/11xc98HAJFPV_iS5atRyyZXfR87H-m5Ux/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/13GMOGpkzJAgRp_rZ8gdpykq6e24hfAyK/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1BPv9qi7wprt7Evs0fWcPhKsF8gyR_GPd/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1FdfSEpwhO0bKNRt2Fu0wu00SE6flch50/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1MTj6C_hyIarqEJjQfx79Sh-qTgwgNLC9/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1RlB1T61Z4yIpT19iKCcudKZWYc2IcjEX/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1T6vILPu68RdwpcVXRB7OR6MggWP7uycO/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1V0II6uGgSVkTi5cAovwXpQMO1HuBzJLC/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1XN6Y42NoL2GlV8Z5TQ1p-6ro2kOk3Cs7/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1aCIUphsIKkbKql07ltwv3hVBzW_TDw8c/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1bLgzywg1WxoI1HmriDMVSNJ9JM-Hflkx/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1dMrJQzKR9b4mMxzG37oMwj-8piNuzz0u/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1f0vujB5AYAbA6u0XbfpJVlQCTJ6ag62E/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1gx95COvopYXiRS1TFixyjsctqABp_rA2/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1htLNgKqA9-VAB9UcEfxpsPPthFt3zaRU/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1klWY5JEdDFIcXZ8NZIADINLyu88KVAKq/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1mQ4qoAGFeFJTPmdLTl4E1NDQk3QBTg-U/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1nUbjkL7jdBD0Nao_QUynGXV81t8__j3B/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true".split(", ");
 
-        // ===============================
-        // CORE UTILITIES & UI LOGIC
-        // ===============================
-        const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
-        const getFormatDate = (d) => { const tzOffset = d.getTimezoneOffset() * 60000; return (new Date(d.getTime() - tzOffset)).toISOString().split('T')[0]; };
-        const getReadableDate = (s) => new Date(s).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-        const getPriorityBadge = (p) => {
-            const c = { high: 'text-red-500', medium: 'text-yellow-500', low: 'text-green-500' };
-            const i = { high: 'ph-arrow-up', medium: 'ph-minus', low: 'ph-arrow-down' };
-            return `<span class="${c[p||'low']} font-bold shrink-0 text-lg" title="Prioritas ${p||'low'}"><i class="ph-bold ${i[p||'low']}"></i></span>`;
+        const names6B = [
+            "Ayu Cantika Surya Darma", "Boanerges Fridly Suman Tamonob", "Clairine Saralee Waltraud Lonata", "Colin Johannes Hartanto", "Cora Melody Lesmana", "Daniel Tampubolon", "Elgiva Patricia Muti Ngai", "Ezra Nathanael Arif", "Gosyena Queena Revival", "Grace Sayang Palada", "Joceline Lidya Sir Michael", "Joeb Edward Zhang", "Judith Shallom Libra", "Manuel Nathanael Nugraha", "Milanrose Lifesaver Manengkei", "Nail Ethan Setiono", "Oliver Wijayanto", "Silvana Nindy Putri Sujarwadi", "Syahira Husni"
+        ];
+        const links6B = "https://docs.google.com/spreadsheets/d/144mNigCHK2zqvAcaEa-gffgtVGKTknU1/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1AVxDNWzhoEwk6wKuV6D1sKiGci28Xjbv/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1Cm5_IfIkhZXx0R5tBazo5Az5d-SGp-Os/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1D1YndNZYfBYHBoacI2gIlZdxlAIB96TL/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1H4eu8SBgV13vVYzij3sqttQJEJZ7kScV/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1JH4h42L6M7RuP05mRTYX0azgbcX7vs1G/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1LQ-vC1QkbL2mnJ3pdNp_4Fx3JCb8OEzl/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1R5Hl3lBFiVaAYKhY6_K1QqPhETUD-j9Y/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1RAbzw1j7OGOh-2P8Y4oCIBiYfy-d6khD/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1SiNljgKvhs1A1w8V-rT4O_h72ftwRO0m/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1YEPKxYPRmhLbANE7dD5qsSKQRRrcmgQ1/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1fs8R3mHhNNUhz-lJoOCYorNbNQhngBaw/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1mOIkZNO8vYEDCC487WElr-wTKmVpc67k/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1nqONKtzrtHDeJuvRQCC-7nTUTsvpGz0O/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1qJwWK52sjoCZirLMfGSMyWMv0F9ItlNf/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1sBWgHI8A9i4Ol1UzzGL4nfwCcGKGhT1R/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1skLk5J84RixURjH6QLNpWBMqX3T6xtv8/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1xN8KkoLfIYJEXDVFRyTD22G1ihl8l5rT/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true, https://docs.google.com/spreadsheets/d/1xeSE3IBgtSPT9OssG76lVHSx3y2VeXVI/edit?usp=sharing&ouid=117606661997581537426&rtpof=true&sd=true".split(", ");
+
+        const studentData = {
+            "6A": names6A.map((name, index) => ({ name, link: links6A[index] })),
+            "6B": names6B.map((name, index) => ({ name, link: links6B[index] }))
         };
 
-        // ===============================
-        // WEATHER & HOLIDAYS API
-        // ===============================
-        async function fetchWeather() {
-            try {
-                const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-8.65&longitude=115.22&current_weather=true");
-                const data = await res.json();
-                const temp = Math.round(data.current_weather.temperature);
-                const el = document.getElementById('weatherTemp');
-                if(el) {
-                    el.innerText = `${temp}°C`;
-                    el.parentElement.classList.remove('hidden');
-                    el.parentElement.classList.add('flex');
-                }
-            } catch (e) {
-                console.log("Weather fetch failed");
-            }
-        }
-
-        async function fetchHolidays(year) {
-            try {
-                const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/ID`);
-                if(res.ok) {
-                    holidays = await res.json();
-                    localStorage.setItem('dashboard_holidays', JSON.stringify(holidays));
-                    if (typeof renderCalendar === 'function') renderCalendar();
-                }
-            } catch (e) {
-                console.log("Holidays fetch failed");
-            }
-        }
-
-        // ===============================
-        // TABS & THEME
-        // ===============================
-        function switchTab(id) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            const targetTab = document.getElementById(`tab-${id}`); if(targetTab) targetTab.classList.add('active');
+        // DOM Elements
+        const formSection = document.getElementById('form-section');
+        const resultSection = document.getElementById('result-section');
+        const form = document.getElementById('generator-form');
+        const kelasSelect = document.getElementById('kelas');
+        const namaSelect = document.getElementById('nama');
+        
+        // Cek Local Storage saat aplikasi dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedData = localStorage.getItem('userGeneratedLink');
             
-            document.querySelectorAll('nav button').forEach(b => {
-                b.classList.remove('bg-blue-100', 'dark:bg-blue-900/50', 'text-blue-700', 'dark:text-blue-300', 'shadow-sm');
-                b.classList.add('text-gray-600', 'dark:text-gray-400', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
-            });
-            const activeBtn = document.getElementById(`btn-tab-${id}`);
-            if (activeBtn) {
-                activeBtn.classList.remove('text-gray-600', 'dark:text-gray-400', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
-                activeBtn.classList.add('bg-blue-100', 'dark:bg-blue-900/50', 'text-blue-700', 'dark:text-blue-300', 'shadow-sm');
+            if (savedData) {
+                // Jika sudah pernah generate, langsung tampilkan hasilnya
+                const data = JSON.parse(savedData);
+                showResult(data);
             }
-            if (id === 'keuangan') setTimeout(renderChart, 100);
-            if (id === 'jurnal' || id === 'dashboard') setTimeout(renderStatsAndBadges, 100); 
-            if (id === 'dashboard') setTimeout(() => { const h = new Date().getHours().toString().padStart(2, '0'); const elH = document.getElementById(`hour-${h}`); if(elH) elH.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
-        }
+        });
 
-        function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            const dmIcon = document.getElementById('darkModeIcon');
-            if (isDarkMode) {
-                document.documentElement.classList.add('dark');
-                if (dmIcon) dmIcon.classList.replace('ph-moon', 'ph-sun');
-            } else {
-                document.documentElement.classList.remove('dark');
-                if (dmIcon) dmIcon.classList.replace('ph-sun', 'ph-moon');
+        // Event: Ketika kelas dipilih, perbarui daftar nama
+        kelasSelect.addEventListener('change', (e) => {
+            const selectedClass = e.target.value;
+            
+            // Bersihkan dan aktifkan dropdown nama
+            namaSelect.innerHTML = '<option value="" disabled selected>-- Pilih Nama Siswa --</option>';
+            namaSelect.disabled = false;
+
+            if (studentData[selectedClass]) {
+                studentData[selectedClass].forEach((student, index) => {
+                    const option = document.createElement('option');
+                    option.value = index; // simpan index untuk memudahkan referensi
+                    option.textContent = student.name;
+                    namaSelect.appendChild(option);
+                });
             }
-            localStorage.setItem('dashboard_darkmode', isDarkMode);
-            if(expenseChartInstance) renderChart(); 
-            window.syncToCloud();
-        }
+        });
 
-        // ===============================
-        // MODALS & SETTINGS
-        // ===============================
-        function showConfirm(msg, cb) {
-            const mTitle = document.getElementById('modalTitle'), mMsg = document.getElementById('modalMessage'), btnCancel = document.getElementById('modalBtnCancel'), modal = document.getElementById('customModal'), btnConfirm = document.getElementById('modalBtnConfirm');
-            if (mTitle) mTitle.innerText = "Konfirmasi"; if (mMsg) mMsg.innerHTML = msg; if (btnCancel) btnCancel.classList.remove('hidden'); if (modal) modal.classList.replace('hidden', 'flex');
-            if (btnConfirm) btnConfirm.onclick = () => { closeModal(); cb(); }; if (btnCancel) btnCancel.onclick = closeModal;
-        }
-        function showAlert(msg) {
-            const mTitle = document.getElementById('modalTitle'), mMsg = document.getElementById('modalMessage'), btnCancel = document.getElementById('modalBtnCancel'), modal = document.getElementById('customModal'), btnConfirm = document.getElementById('modalBtnConfirm');
-            if (mTitle) mTitle.innerText = "Informasi Sistem"; if (mMsg) mMsg.innerHTML = msg; if (btnCancel) btnCancel.classList.add('hidden'); if (modal) modal.classList.replace('hidden', 'flex');
-            if (btnConfirm) btnConfirm.onclick = closeModal;
-        }
-        function closeModal() { 
-            const modal = document.getElementById('customModal');
-            if(modal) modal.classList.replace('flex', 'hidden'); 
-        }
-
-        function openSettingsModal() {
-            const sModal = document.getElementById('settingsModal');
-            if(sModal) sModal.classList.replace('hidden', 'flex');
-            if (userPin) {
-                document.getElementById('oldPinContainer').classList.remove('hidden');
-                document.getElementById('oldPinInput').required = true;
-            } else {
-                document.getElementById('oldPinContainer').classList.add('hidden');
-                document.getElementById('oldPinInput').required = false;
-            }
-            document.getElementById('oldPinInput').value = '';
-            document.getElementById('newPinInput').value = '';
-            document.getElementById('geminiKeyInput').value = geminiApiKey;
-            document.getElementById('waNumberInput').value = waNumber;
-            document.getElementById('fonnteTokenInput').value = fonnteToken;
-            document.getElementById('reminderTimeInput').value = reminderTime;
-        }
-
-        function closeSettingsModal() {
-            document.getElementById('settingsModal').classList.replace('flex', 'hidden');
-        }
-
-        function saveSettings(e) {
+        // Event: Form Submit
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-            const oldPin = document.getElementById('oldPinInput').value;
-            const newPin = document.getElementById('newPinInput').value;
-            if (userPin) { 
-                if (oldPin !== '' || newPin !== '') {
-                    if (oldPin !== userPin) { showAlert("<span class='text-red-600 dark:text-red-400 font-bold'>Gagal:</span> PIN Lama yang Anda masukkan salah!"); return; }
-                    if (newPin !== '' && newPin.length !== 6) { showAlert("<span class='text-red-600 dark:text-red-400 font-bold'>Gagal:</span> PIN Baru wajib terdiri dari tepat 6 angka!"); return; }
-                    userPin = newPin; 
-                }
-            } else { 
-                if (newPin !== '') {
-                    if (newPin.length !== 6) { showAlert("<span class='text-red-600 dark:text-red-400 font-bold'>Gagal:</span> PIN Baru wajib terdiri dari tepat 6 angka!"); return; }
-                    userPin = newPin;
-                }
-            }
-            geminiApiKey = document.getElementById('geminiKeyInput').value.trim();
-            waNumber = document.getElementById('waNumberInput').value.trim();
-            fonnteToken = document.getElementById('fonnteTokenInput').value.trim();
-            reminderTime = document.getElementById('reminderTimeInput').value;
             
-            localStorage.setItem('dashboard_pin', userPin);
-            localStorage.setItem('dashboard_gemini_key', geminiApiKey);
-            localStorage.setItem('dashboard_wa_number', waNumber);
-            localStorage.setItem('dashboard_fonnte_token', fonnteToken);
-            localStorage.setItem('dashboard_reminder_time', reminderTime);
+            const selectedClass = kelasSelect.value;
+            const selectedIndex = namaSelect.value;
 
-            closeSettingsModal();
-            showAlert("<span class='text-green-600 dark:text-green-400 font-bold'>Berhasil:</span> Pengaturan berhasil disimpan.");
-            window.syncToCloud(); 
-        }
+            if (!selectedClass || selectedIndex === "") return;
 
-        function unlockDashboard() {
-            const inputEl = document.getElementById('unlockPinInput');
-            const errorEl = document.getElementById('unlockError');
-            if (inputEl && inputEl.value === userPin) {
-                document.getElementById('lockScreen').classList.replace('flex', 'hidden');
-                inputEl.value = '';
-                errorEl.classList.add('hidden');
-            } else {
-                errorEl.classList.remove('hidden');
-            }
-        }
-
-        // ===============================
-        // PLAYER GAMIFICATION
-        // ===============================
-        function savePlayer() { localStorage.setItem("dashboard_player", JSON.stringify(playerData)); window.syncToCloud(); }
-        function requiredXP() { return playerData.level * 100; }
-        function resetDailyQuestIfNeeded() {
-            if (playerData.dailyQuest.date !== new Date().toDateString()) {
-                playerData.dailyQuest = { tasks: 0, pomodoro: 0, journal: 0, completed: false, date: new Date().toDateString() };
-                savePlayer();
-            }
-        }
-        function updateDailyQuestUI() {
-            const container = document.getElementById("dailyQuestContent"); if (!container) return;
-            const tDone = playerData.dailyQuest.tasks >= 3; const pDone = playerData.dailyQuest.pomodoro >= 2; const jDone = playerData.dailyQuest.journal >= 1;
-            container.innerHTML = `
-                <div class="flex justify-between items-center bg-black/10 hover:bg-black/20 transition p-2 rounded-lg backdrop-blur-sm border border-white/10 ${tDone ? 'opacity-50' : ''}">
-                    <span class="flex items-center gap-1.5"><i class="ph-bold ${tDone ? 'ph-check-circle text-yellow-300' : 'ph-circle'}"></i> 3 Tugas</span> <span>${Math.min(playerData.dailyQuest.tasks, 3)}/3</span>
-                </div>
-                <div class="flex justify-between items-center bg-black/10 hover:bg-black/20 transition p-2 rounded-lg backdrop-blur-sm border border-white/10 mt-1.5 ${pDone ? 'opacity-50' : ''}">
-                    <span class="flex items-center gap-1.5"><i class="ph-bold ${pDone ? 'ph-check-circle text-yellow-300' : 'ph-circle'}"></i> 2 Pomodoro</span> <span>${Math.min(playerData.dailyQuest.pomodoro, 2)}/2</span>
-                </div>
-                <div class="flex justify-between items-center bg-black/10 hover:bg-black/20 transition p-2 rounded-lg backdrop-blur-sm border border-white/10 mt-1.5 ${jDone ? 'opacity-50' : ''}">
-                    <span class="flex items-center gap-1.5"><i class="ph-bold ${jDone ? 'ph-check-circle text-yellow-300' : 'ph-circle'}"></i> 1 Jurnal</span> <span>${Math.min(playerData.dailyQuest.journal, 1)}/1</span>
-                </div>
-                ${playerData.dailyQuest.completed ? 
-                    '<div class="font-black text-yellow-300 mt-3 text-center animate-pulse drop-shadow-md py-1 border border-yellow-400/50 rounded-lg bg-yellow-400/20"><i class="ph-fill ph-confetti"></i> QUEST COMPLETED!</div>' : 
-                    '<div class="text-[10px] text-emerald-100 mt-2.5 text-center font-bold uppercase tracking-widest opacity-80">Reward: +50 XP</div>'}
-            `;
-        }
-        function checkDailyQuestCompletion() {
-            if (playerData.dailyQuest.tasks >= 3 && playerData.dailyQuest.pomodoro >= 2 && playerData.dailyQuest.journal >= 1 && !playerData.dailyQuest.completed) {
-                playerData.dailyQuest.completed = true; addXP(50);
-                showAlert("<span class='text-emerald-600 font-bold text-xl'>🎉 Daily Quest Selesai!</span><br><br>Kerja bagus! Kamu mendapatkan <b>+50 XP</b> tambahan.");
-            }
-            savePlayer(); updateDailyQuestUI();
-        }
-        function checkBadgeUnlock() {
-            let unlocked = false;
-            if (playerData.level >= 5 && !playerData.badges.includes("Novice Master (Lvl 5)")) { playerData.badges.push("Novice Master (Lvl 5)"); unlocked = true; }
-            if (playerData.level >= 10 && !playerData.badges.includes("Pro Achiever (Lvl 10)")) { playerData.badges.push("Pro Achiever (Lvl 10)"); unlocked = true; }
-            if (stats.pomodoroCount >= 10 && !playerData.badges.includes("Fokus 10x")) { playerData.badges.push("Fokus 10x"); unlocked = true; }
-            const maxS = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
-            if (maxS >= 7 && !playerData.badges.includes("Streak 7 Hari")) { playerData.badges.push("Streak 7 Hari"); unlocked = true; }
-            if(unlocked) { savePlayer(); renderBadges(); }
-        }
-        function renderBadges() {
-            const bMini = document.getElementById("badgeContainer"); const bFull = document.getElementById("fullBadgeContainer");
-            let html = "";
-            if (playerData.badges.length === 0) { html = '<p class="text-[10px] text-gray-400 italic col-span-2 text-center py-2">Belum ada badge. Capai target tertentu!</p>'; } 
-            else {
-                playerData.badges.forEach(b => { html += `<div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-2 rounded-xl shadow border border-purple-400/30 text-center text-[10px] font-bold flex flex-col items-center justify-center gap-1 hover:scale-105 transition-transform"><i class="ph-fill ph-medal text-xl text-yellow-300 drop-shadow"></i> <span>${b}</span></div>`; });
-            }
-            if(bMini) bMini.innerHTML = html; if(bFull) bFull.innerHTML = html;
-        }
-        function updatePlayerUI() {
-            const lEl = document.getElementById("playerLevel"), xEl = document.getElementById("playerXP"), xBar = document.getElementById("xpBar");
-            if (!lEl) return;
-            const pct = Math.min((playerData.xp / requiredXP()) * 100, 100);
-            lEl.innerText = playerData.level; xEl.innerText = `${playerData.xp} / ${requiredXP()}`; xBar.style.width = `${pct}%`;
-            updateDailyQuestUI(); renderBadges();
-        }
-        function addXP(amt) {
-            playerData.xp += amt;
-            if (playerData.xp >= requiredXP()) { playerData.xp -= requiredXP(); playerData.level++; showLevelUpPopup(); checkBadgeUnlock(); }
-            savePlayer(); updatePlayerUI();
-            const pXP = document.getElementById("playerXP");
-            if(pXP) { pXP.classList.add("text-green-500", "scale-110"); setTimeout(() => pXP.classList.remove("text-green-500", "scale-110"), 300); }
-        }
-        function showLevelUpPopup() {
-            const popup = document.getElementById("levelUpPopup");
-            const lvl = document.getElementById("newLevel");
-            if(lvl) lvl.innerText = playerData.level;
-            if(popup) { popup.classList.remove("hidden"); popup.classList.add("flex"); setTimeout(() => { popup.classList.remove("flex"); popup.classList.add("hidden"); }, 3500); }
-        }
-
-        function refreshAll() {
-            resetDailyQuestIfNeeded(); updatePlayerUI();
-            renderDashboardSchedules(); renderUpcomingActivity(); renderCalendar(); renderTasks(); renderHabits(); 
-            renderCategories(); renderSources(); calculateBalance(); renderTransactions(); renderJournals(); 
-            renderStatsAndBadges();
-        }
-
-        // ===============================
-        // GOOGLE SPREADSHEET SYNC
-        // ===============================
-        function updateStatus(text, icon = 'ph-cloud-check', color = 'text-blue-600', bg = 'bg-blue-50') {
-            const el = document.getElementById('cloudStatus'), textEl = document.getElementById('syncText'), iconEl = document.getElementById('cloudIcon');
-            if(el && textEl && iconEl) { textEl.innerText = text; iconEl.className = `ph-bold ${icon} text-lg`; el.className = `border px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all ${bg} ${color} border-current dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600`; }
-        }
-        async function loadFromSpreadsheet(isManual = false) {
-            if (!GOOGLE_SCRIPT_URL || !GOOGLE_SCRIPT_URL.includes("macros")) return;
-            updateStatus('Memuat...', 'ph-spinner animate-spin', 'text-blue-600', 'bg-blue-50');
-            try {
-                const response = await fetch(`${GOOGLE_SCRIPT_URL}?t=${Date.now()}`);
-                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                const data = JSON.parse(await response.text());
-                const nD = (d) => { if (!d) return ""; let s = String(d); return s.includes('T') ? s.split('T')[0] : s; };
-                const nT = (t) => { if (!t) return "00:00"; let s = String(t); if(s.includes('T') && s.includes('1899')) { const p = s.split('T')[1].split(':'); return `${p[0]}:${p[1]}`; } else if(s.includes('T')) { const d=new Date(s); if(!isNaN(d)) return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); } return s; };
-
-                if (data.activities) activities = data.activities.map(a => ({...a, id: String(a.id), date: nD(a.date), time: nT(a.time), endTime: nT(a.endTime || a.time), priority: a.priority || 'low'}));
-                if (data.tasks) tasks = data.tasks.map(t => ({...t, id: String(t.id), date: nD(t.date), completed: !!t.completed}));
-                if (data.transactions) transactions = data.transactions.map(t => ({...t, id: String(t.id), amount: Number(t.amount) || 0, timestamp: String(t.timestamp || new Date().toISOString())}));
-                if (data.sources) sources = data.sources; if (data.habits) habits = data.habits;
-                if (data.journals) journals = data.journals.map(j => ({...j, id: String(j.id), date: nD(j.date), text: String(j.text), timestamp: String(j.timestamp)}));
-                if (data.stats) stats = data.stats;
-                if (data.playerData) { playerData = data.playerData; if (!playerData.dailyQuest) playerData.dailyQuest = { tasks:0, pomodoro:0, journal:0, completed:false, date:new Date().toDateString() }; if (!playerData.badges) playerData.badges = []; }
-                
-                if (data.settings) {
-                    const s = data.settings;
-                    if (s.notes !== undefined) { notes = s.notes; const qn = document.getElementById('quickNotes'); if(qn) qn.value = notes; localStorage.setItem('dashboard_notes', notes); }
-                    if (s.isDarkMode !== undefined) { isDarkMode = s.isDarkMode; localStorage.setItem('dashboard_darkmode', isDarkMode); if(isDarkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }
-                    if (s.waNumber !== undefined) { waNumber = String(s.waNumber); localStorage.setItem('dashboard_wa_number', waNumber); }
-                    if (s.fonnteToken !== undefined) { fonnteToken = String(s.fonnteToken); localStorage.setItem('dashboard_fonnte_token', fonnteToken); }
-                    if (s.reminderTime !== undefined) { reminderTime = String(s.reminderTime); localStorage.setItem('dashboard_reminder_time', reminderTime); }
-                    if (s.pin !== undefined) { userPin = String(s.pin).trim(); localStorage.setItem('dashboard_pin', userPin); const ls = document.getElementById('lockScreen'); if(userPin && ls && ls.classList.contains('hidden')) { ls.classList.replace('hidden', 'flex'); document.getElementById('unlockPinInput').value = ''; } }
-                }
-                
-                localStorage.setItem('dashboard_activities', JSON.stringify(activities)); localStorage.setItem('dashboard_transactions', JSON.stringify(transactions));
-                localStorage.setItem('dashboard_tasks', JSON.stringify(tasks)); localStorage.setItem('dashboard_sources', JSON.stringify(sources));
-                localStorage.setItem('dashboard_habits', JSON.stringify(habits)); localStorage.setItem('dashboard_journals', JSON.stringify(journals));
-                localStorage.setItem('dashboard_stats', JSON.stringify(stats)); savePlayer();
-                
-                refreshAll(); updateStatus('Tersinkron', 'ph-cloud-check', 'text-emerald-600', 'bg-emerald-50 border-emerald-200');
-                if(isManual) showAlert("<span class='text-emerald-600 font-bold'>Sukses!</span> Data terbaru berhasil dimuat.");
-            } catch (e) { updateStatus('Offline', 'ph-cloud-slash', 'text-gray-500', 'bg-gray-100'); }
-        }
-        window.syncToCloud = async () => { await syncToSpreadsheet(true); };
-        async function syncToSpreadsheet(isAuto = false) {
-            if (!GOOGLE_SCRIPT_URL || !GOOGLE_SCRIPT_URL.includes("macros")) return;
-            updateStatus('Menyimpan...', 'ph-spinner animate-spin', 'text-yellow-600', 'bg-yellow-50 border-yellow-200');
-            try {
-                const payload = { activities, tasks, transactions, sources, habits, journals, stats, playerData, settings: { pin: userPin, notes: notes, isDarkMode: isDarkMode, waNumber: waNumber, fonnteToken: fonnteToken, reminderTime: reminderTime } };
-                const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error("Jaringan gagal.");
-                updateStatus('Tersinkron', 'ph-cloud-check', 'text-emerald-600', 'bg-emerald-50 border-emerald-200');
-            } catch (e) { 
-                updateStatus('Gagal Sinkron', 'ph-cloud-warning', 'text-red-600', 'bg-red-50 border-red-200');
-                if(!isAuto) showAlert(`<span class="text-yellow-600 font-bold">Tersimpan secara lokal.</span><br><br>Gagal ke Cloud: ${e.message}`);
-            }
-        }
-
-        // ===============================
-        // WHATSAPP REMINDER (FONNTE)
-        // ===============================
-        async function sendWhatsAppReminder(isAuto = false) {
-            if (!fonnteToken || !waNumber) { if(!isAuto) showAlert("<span class='text-red-600 font-bold'>Gagal:</span> Harap lengkapi Token Fonnte dan Nomor WA di pengaturan."); return; }
-            const btn = document.getElementById('btnTestWA');
-            if(!isAuto && btn) btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Mengirim...';
-            const todayStr = getFormatDate(new Date());
-            const todayTasks = tasks.filter(t => t.date === todayStr && !t.completed);
-            const todayActs = activities.filter(a => a.date === todayStr).sort((a,b) => a.time.localeCompare(b.time));
-            let message = `*🌟 RANGKUMAN DASHBOARD HARI INI 🌟*\nTanggal: ${getReadableDate(todayStr)}\n\n*📋 TUGAS PENDING (${todayTasks.length}):*\n`;
-            if (todayTasks.length > 0) { todayTasks.forEach((t, i) => { message += `${i+1}. ${t.text}\n`; }); } else { message += `- Tidak ada tugas yang tertunda.\n`; }
-            message += `\n*⏰ JADWAL HARI INI (${todayActs.length}):*\n`;
-            if (todayActs.length > 0) { todayActs.forEach((a, i) => { message += `- ${a.time}: ${a.title}\n`; }); } else { message += `- Tidak ada jadwal.\n`; }
-            message += `\n_~ Personal Dashboard Bot_`;
-            try {
-                const response = await fetch("https://api.fonnte.com/send", { method: "POST", headers: { "Authorization": fonnteToken }, body: new URLSearchParams({ target: waNumber, message: message, countryCode: '62' }) });
-                const result = await response.json();
-                if(!isAuto) {
-                    if (result.status) showAlert(`<span class="text-green-600 font-bold">Sukses!</span><br><br>Pesan berhasil dikirim ke ${waNumber}.`);
-                    else showAlert(`<span class="text-red-600 font-bold">Gagal Mengirim!</span><br><br>Pesan error: ${result.reason || 'Cek Token/Nomor Anda.'}`);
-                }
-            } catch(e) {
-                if(!isAuto) showAlert(`<span class="text-red-600 font-bold">Error Jaringan!</span><br><br>${e.message}`);
-            } finally {
-                if(!isAuto && btn) btn.innerHTML = '<i class="ph-bold ph-paper-plane-right"></i> Tes Kirim Pesan WA';
-            }
-        }
-
-        // ===============================
-        // STICKY NOTES
-        // ===============================
-        function saveNotes() {
-            const qNotes = document.getElementById('quickNotes');
-            if (qNotes) notes = qNotes.value;
-            localStorage.setItem('dashboard_notes', notes);
-            window.syncToCloud();
+            const studentInfo = studentData[selectedClass][selectedIndex];
             
-            const icon = document.getElementById('notesSavedIcon');
-            if (icon) { icon.classList.remove('hidden'); setTimeout(() => icon.classList.add('hidden'), 2000); }
-        }
+            const finalDataToSave = {
+                kelas: selectedClass,
+                nama: studentInfo.name,
+                link: studentInfo.link
+            };
 
-        // ===============================
-        // AI MAGIC & GEMINI
-        // ===============================
-        async function aiBreakdownTask(id) {
-            const apiKey = geminiApiKey || ""; 
-            if (!apiKey) { showAlert("<span class='text-red-600 font-bold'>API Key Kosong!</span><br><br>Harap isi API Key Gemini di Pengaturan."); return; }
-            const taskObj = tasks.find(x => x.id === id); if(!taskObj) return;
-            showAlert('<div class="flex flex-col items-center"><i class="ph-bold ph-spinner animate-spin text-5xl text-purple-500 mb-3"></i><p class="font-semibold text-gray-700 dark:text-gray-200">AI sedang memikirkan langkah-langkah tugas...</p></div>');
-            const prompt = `Pecah tugas berikut menjadi 3 langkah kecil yang spesifik dan praktis untuk dilakukan. Format balasan wajib dalam HTML list bullet point (<ul><li>...</li></ul>) yang rapi. Jangan tambahkan basa-basi. Tugas: "${taskObj.text}"`;
-            
-            try {
-                let response, data, retries = 5, attempt = 0;
-                let delays = [1000, 2000, 4000, 8000, 16000];
-                while(attempt < retries) {
-                    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    if (response.ok) break; 
-                    attempt++; 
-                    if (attempt === retries) throw new Error("Terjadi masalah pada server API.");
-                    await new Promise(r => setTimeout(r, delays[attempt-1]));
-                }
-                
-                data = await response.json(); const result = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if(!result) throw new Error("Format balasan kosong.");
-                showAlert(`<div class="text-left w-full"><h3 class="font-bold text-purple-600 dark:text-purple-400 mb-3 flex items-center gap-2"><i class="ph-fill ph-sparkle text-yellow-400"></i> Saran Langkah AI:</h3><div class="prose prose-sm dark:prose-invert prose-ul:pl-5 prose-li:mb-1 marker:text-purple-500 text-gray-700 dark:text-gray-300">${result}</div></div>`);
-            } catch (e) { showAlert(`<span class='text-red-500 font-bold'>Gagal mendapatkan saran AI:</span><br><br><span class='text-xs'>${e.message}</span>`); }
-        }
+            // Simpan ke Local Storage agar tidak bisa generate ulang
+            localStorage.setItem('userGeneratedLink', JSON.stringify(finalDataToSave));
 
-        async function aiJournalFeedback() {
-            const apiKey = geminiApiKey || ""; 
-            if (!apiKey) { showAlert("<span class='text-red-600 font-bold'>API Key Kosong!</span><br><br>Harap isi API Key Gemini di Pengaturan."); return; }
-            const todayStr = getFormatDate(new Date()); const todayJournals = journals.filter(j => j.date === todayStr); const todayTasks = tasks.filter(t => t.date === todayStr && t.completed);
-            let prompt = "Saya butuh 1-2 kalimat refleksi atau nasihat yang sangat personal, inspiratif, dan suportif dalam bahasa Indonesia yang santai. ";
-            if(todayJournals.length > 0) prompt += `Hari ini saya menulis jurnal: "${todayJournals.map(j => j.text).join(" ")}". `;
-            if(todayTasks.length > 0) prompt += `Saya juga telah menyelesaikan ${todayTasks.length} tugas hari ini. `;
-            if(todayJournals.length === 0 && todayTasks.length === 0) prompt += "Saya belum menyelesaikan tugas apa pun atau menulis jurnal hari ini. Berikan saya sedikit dorongan semangat untuk mulai!";
-            showAlert('<div class="flex flex-col items-center"><i class="ph-bold ph-spinner animate-spin text-5xl text-purple-500 mb-3"></i><p class="font-semibold text-gray-700 dark:text-gray-200">AI sedang membaca jurnal Anda...</p></div>');
-            
-            try {
-                let response, data, retries = 5, attempt = 0;
-                let delays = [1000, 2000, 4000, 8000, 16000];
-                while(attempt < retries) {
-                    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    if (response.ok) break; 
-                    attempt++; 
-                    if (attempt === retries) throw new Error("Terjadi masalah pada server API.");
-                    await new Promise(r => setTimeout(r, delays[attempt-1]));
-                }
-                
-                data = await response.json(); const result = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if(!result) throw new Error("Format balasan kosong.");
-                showAlert(`<div class="text-center flex flex-col items-center"><div class="w-16 h-16 bg-purple-100 dark:bg-purple-900/50 rounded-full flex items-center justify-center mb-4"><i class="ph-fill ph-sparkle text-4xl text-yellow-500"></i></div><h3 class="font-bold text-lg text-purple-600 dark:text-purple-400 mb-3">Pesan AI Untukmu</h3><p class="italic text-gray-700 dark:text-gray-200 text-sm leading-relaxed border-l-4 border-purple-400 pl-3">"${result}"</p></div>`);
-            } catch (e) { showAlert(`<span class='text-red-500 font-bold'>Gagal terhubung ke AI:</span><br><br><span class='text-xs'>${e.message}</span>`); }
-        }
-
-        // ===============================
-        // POMODORO TIMER
-        // ===============================
-        function toggleZenMode() { isZenMode = !isZenMode; const i = document.querySelector('#btnZenMode i'); if(i) i.className = isZenMode ? 'ph-bold ph-corners-in text-base' : 'ph-bold ph-corners-out text-base'; updatePomodoroTheme(isPomodoroRunning); }
-        function updatePomodoroTheme(run) { 
-            const c = document.getElementById('pomodoroCard'), ti = document.getElementById('pomodoroTitle'), i = document.getElementById('pomodoroTitleIcon'), m = document.getElementById('pomodoroModeText'), d = document.getElementById('pomodoroDisplay'), bs = document.getElementById('btnPomoStart'), br = document.getElementById('btnPomoReset');
-            if(!c) return;
-            const zen = isZenMode ? " !fixed !inset-0 !z-[100] !rounded-none !h-screen !w-screen !m-0 flex flex-col justify-center items-center backdrop-blur-xl" : "";
-            if(run) {
-                if(isPomodoroWork) {
-                    c.className = "card bg-gray-900 border-t-4 border-indigo-500 shadow-xl" + zen; ti.className = "text-sm font-black mb-1 text-indigo-400 flex justify-center items-center gap-1.5 transition-colors"; i.className = "ph-fill ph-clock-countdown text-indigo-500 text-lg transition-colors animate-pulse"; m.className = "text-[10px] font-bold text-indigo-900 bg-indigo-400 mb-3 uppercase tracking-widest inline-block px-2 py-0.5 rounded-full"; d.className = "text-6xl font-black text-indigo-300 tracking-widest mb-4 drop-shadow-[0_0_15px_rgba(99,102,241,0.5)] tabular-nums"; bs.className = "bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl w-14 h-12 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.6)]"; br.className = "bg-gray-800 hover:bg-gray-700 text-indigo-400 rounded-xl w-12 h-12 flex items-center justify-center";
-                } else {
-                    c.className = "card bg-gray-900 border-t-4 border-teal-500 shadow-xl" + zen; ti.className = "text-sm font-black mb-1 text-teal-400 flex justify-center items-center gap-1.5 transition-colors"; i.className = "ph-fill ph-coffee text-teal-500 text-lg transition-colors animate-bounce"; m.className = "text-[10px] font-bold text-teal-900 bg-teal-400 mb-3 uppercase tracking-widest inline-block px-2 py-0.5 rounded-full"; d.className = "text-6xl font-black text-teal-300 tracking-widest mb-4 drop-shadow-[0_0_15px_rgba(20,184,166,0.5)] tabular-nums"; bs.className = "bg-teal-600 hover:bg-teal-500 text-white rounded-xl w-14 h-12 flex items-center justify-center shadow-[0_0_15px_rgba(20,184,166,0.6)]"; br.className = "bg-gray-800 hover:bg-gray-700 text-teal-400 rounded-xl w-12 h-12 flex items-center justify-center";
-                }
-            } else {
-                const work = isPomodoroWork;
-                c.className = `card !border-t-4 !border-t-${work?'red':'green'}-500 text-center relative overflow-hidden transition-all duration-500 shadow-sm` + zen; ti.className = "text-sm font-black mb-1 text-gray-800 dark:text-white relative z-10 flex justify-center items-center gap-1.5"; i.className = `ph-fill ${work?'ph-clock-countdown':'ph-coffee'} text-${work?'red':'green'}-500 text-lg`; m.className = `text-[10px] font-bold text-${work?'red':'green'}-500 bg-${work?'red':'green'}-50 dark:bg-${work?'red':'green'}-900/20 mb-2 uppercase tracking-widest inline-block px-2 py-0.5 rounded-full relative z-10`; d.className = "text-5xl font-black text-gray-900 dark:text-white tracking-widest mb-4 relative z-10 drop-shadow-sm tabular-nums"; bs.className = `bg-${work?'red':'green'}-500 hover:bg-${work?'red':'green'}-600 text-white rounded-xl w-14 h-12 flex items-center justify-center shadow-md relative z-10`; br.className = "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-xl w-12 h-12 flex items-center justify-center relative z-10";
-            }
-        }
-        function updatePomodoroDisplay() { const d = document.getElementById('pomodoroDisplay'); if(d) d.innerText = `${Math.floor(pomodoroTimeLeft/60).toString().padStart(2,'0')}:${(pomodoroTimeLeft%60).toString().padStart(2,'0')}`; document.title = d ? `(${d.innerText}) Dashboard` : "Dashboard"; }
-        function togglePomodoro() { 
-            const bi = document.querySelector('#btnPomoStart i'); if(!bi) return;
-            if(isPomodoroRunning) { clearInterval(pomodoroTimer); bi.classList.replace('ph-pause', 'ph-play'); isPomodoroRunning = false; updatePomodoroTheme(false); document.title = "Personal Dashboard"; } 
-            else {
-                isPomodoroRunning = true; bi.classList.replace('ph-play', 'ph-pause'); updatePomodoroTheme(true); 
-                pomodoroTimer = setInterval(() => {
-                    if(pomodoroTimeLeft > 0) { pomodoroTimeLeft--; updatePomodoroDisplay(); } 
-                    else {
-                        clearInterval(pomodoroTimer); isPomodoroRunning = false; bi.classList.replace('ph-pause', 'ph-play'); updatePomodoroTheme(false); document.title = "Waktu Habis!";
-                        if(isPomodoroWork) { stats.pomodoroCount = (stats.pomodoroCount||0)+1; localStorage.setItem('dashboard_stats', JSON.stringify(stats)); playerData.dailyQuest.pomodoro++; addXP(5); checkDailyQuestCompletion(); checkBadgeUnlock(); window.syncToCloud(); }
-                        showAlert(`<div class='text-center'><i class='ph-fill ${isPomodoroWork?'ph-clock-countdown text-indigo-500':'ph-coffee text-teal-500'} text-6xl mb-2 animate-bounce'></i><br><b class='text-xl'>Waktu Habis!</b><p class='text-sm mt-2'>Sesi ${isPomodoroWork?'Fokus':'Istirahat'} selesai.</p></div>`);
-                    }
-                }, 1000);
-            }
-        }
-        function resetPomodoro() { clearInterval(pomodoroTimer); isPomodoroRunning = false; const bi = document.querySelector('#btnPomoStart i'); if(bi) bi.classList.replace('ph-pause', 'ph-play'); pomodoroTimeLeft = isPomodoroWork ? 25*60 : 5*60; updatePomodoroDisplay(); updatePomodoroTheme(false); document.title = "Personal Dashboard"; }
-        function switchPomodoroMode(m) { isPomodoroWork = (m===25); const t = document.getElementById('pomodoroModeText'); if(t) t.innerText = isPomodoroWork ? "Sesi Kerja" : "Waktu Rehat"; resetPomodoro(); }
-
-        // ===============================
-        // TIMELINE & CALENDAR
-        // ===============================
-        function renderUpcomingActivity() {
-            const container = document.getElementById('upcomingActivityContainer');
-            if (!container) return;
-            const todayStr = getFormatDate(new Date()); const now = new Date(); const currentMins = now.getHours() * 60 + now.getMinutes();
-            const todayActivities = activities.filter(a => a.date === todayStr).map(act => {
-                const [sH, sM] = String(act.time || "00:00").split(':').map(Number); const [eH, eM] = String(act.endTime || act.time).split(':').map(Number);
-                let startMins = (sH || 0) * 60 + (sM || 0); let endMins = (eH || 0) * 60 + (eM || 0);
-                if (endMins <= startMins) endMins = startMins + 30; return { ...act, startMins, endMins };
-            }).sort((a, b) => a.startMins - b.startMins);
-
-            const ongoing = todayActivities.filter(a => currentMins >= a.startMins && currentMins < a.endMins);
-            const upcoming = todayActivities.filter(a => a.startMins > currentMins);
-            let html = '';
-            if (ongoing.length > 0) {
-                html += `<div><span class="text-[10px] font-bold text-green-500 uppercase tracking-widest flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Berlangsung</span>`;
-                ongoing.forEach(act => {
-                    html += `<div class="p-2.5 mt-1.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-lg flex flex-col gap-1"><div class="flex justify-between items-start"><span class="font-semibold text-green-800 dark:text-green-400 text-sm">${act.title}</span>${getPriorityBadge(act.priority)}</div><span class="text-xs font-bold text-green-700 dark:text-green-500"><i class="ph-bold ph-clock"></i> ${act.time} - ${act.endTime || act.time}</span></div>`;
-                }); html += `</div>`;
-            }
-            if (upcoming.length > 0) {
-                const nextAct = upcoming[0]; 
-                html += `<div class="${ongoing.length > 0 ? 'mt-4' : ''}"><span class="text-[10px] font-bold text-cyan-500 uppercase tracking-widest">Selanjutnya</span><div class="p-2.5 mt-1.5 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800/50 rounded-lg flex flex-col gap-1"><div class="flex justify-between items-start"><span class="font-medium text-cyan-800 dark:text-cyan-400 text-sm">${nextAct.title}</span>${getPriorityBadge(nextAct.priority)}</div><span class="text-xs font-bold text-cyan-700 dark:text-cyan-500"><i class="ph-bold ph-clock"></i> Dimulai jam ${nextAct.time}</span></div></div>`;
-            }
-            if (!html) html = '<p class="text-xs text-gray-400 dark:text-gray-500 italic text-center py-2">Tidak ada jadwal terdekat hari ini. Waktunya bersantai!</p>';
-            container.innerHTML = html;
-        }
-
-        function renderDashboardSchedules() { 
-            const c = document.getElementById('dashboardTodaySchedule'); if(!c) return;
-            const tStr = getFormatDate(new Date()); const nt = new Date().toLocaleTimeString('id-ID',{hour12:false}).slice(0,5);
-            const tA = activities.filter(a=>a.date===tStr).map(act=>{
-                const [sH,sM] = (act.time||"00:00").split(':').map(Number); let [eH,eM] = (act.endTime||act.time).split(':').map(Number);
-                let sm = (sH||0)*60+(sM||0); let em = (eH||0)*60+(eM||0); if(em<=sm) em=sm+30; return {...act, sm, em};
-            }).sort((a,b)=>a.sm-b.sm);
-
-            let cols = []; tA.forEach(a=>{ let p=false; for(let i=0;i<cols.length;i++){ if(cols[i][cols[i].length-1].em<=a.sm){cols[i].push(a);a.col=i;p=true;break;}} if(!p){a.col=cols.length;cols.push([a]);}});
-            let g=""; for(let i=0;i<24;i++) g+=`<div id="hour-${i.toString().padStart(2,'0')}" class="flex border-b border-gray-100 dark:border-gray-700/50 h-[60px] relative"><div class="w-12 shrink-0 text-[9px] text-gray-400 pt-1 pr-2 text-right font-bold">${i.toString().padStart(2,'0')}:00</div><div class="flex-1"></div></div>`;
-            let e = tA.map(a=>{
-                const past = (a.endTime||a.time)<nt;
-                return `<div class="absolute rounded-lg p-2 border-l-4 text-[10px] shadow-sm overflow-hidden flex flex-col group ${past?'bg-gray-100 dark:bg-gray-800 border-gray-300 opacity-60 grayscale':'bg-indigo-50 dark:bg-indigo-900/50 border-indigo-500'} hover:scale-[1.02] hover:z-[90] transition-transform cursor-pointer" style="top:${a.sm}px; height:${a.em-a.sm}px; left:calc(3rem + ${a.col*2}rem); width:calc(100% - 3.5rem - ${a.col*2}rem); z-index:${20+a.col}">
-                    <div class="font-bold flex justify-between items-start text-gray-800 dark:text-gray-200"><span class="bg-white/50 dark:bg-black/20 px-1 rounded truncate flex-1">${a.time}-${a.endTime}</span><div class="hidden group-hover:flex gap-1 ml-1 bg-white dark:bg-gray-700 p-0.5 rounded shadow"><button onclick="editActivity('${a.id}')" class="text-blue-500"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="deleteActivity('${a.id}')" class="text-red-500"><i class="ph-bold ph-trash"></i></button></div></div>
-                    <div class="font-black mt-1 text-gray-900 dark:text-white truncate leading-tight">${a.title}</div>
-                </div>`;
-            }).join('');
-            
-            const nT = (new Date().getHours()*60)+new Date().getMinutes();
-            const nL = `<div class="absolute left-12 right-0 border-t-2 border-red-500 border-dashed z-50 pointer-events-none opacity-80" style="top:${nT}px"><div class="absolute -left-1.5 -top-1.5 w-3 h-3 bg-red-500 rounded-full shadow-[0_0_8px_red]"></div></div>`;
-            c.innerHTML = `<div class="relative h-[1440px] w-full">${g}${e}${nL}</div>`;
-        }
-
-        function renderCalendar() { 
-            const g = document.getElementById('calendarGrid'), h = document.getElementById('calendarMonthYear'); if(!g||!h) return;
-            const mn = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"]; h.innerText = `${mn[currentMonth]} ${currentYear}`;
-            const fd = new Date(currentYear, currentMonth, 1).getDay(); const dim = new Date(currentYear, currentMonth+1, 0).getDate(); const tStr = getFormatDate(new Date());
-            let html = ""; for(let i=0; i<fd; i++) html += '<div class="calendar-day empty"></div>';
-            for(let d=1; d<=dim; d++) {
-                const ds = getFormatDate(new Date(currentYear, currentMonth, d)); const hs = activities.some(a=>a.date===ds);
-                const hol = holidays.find(x=>x.date===ds);
-                html += `<div onclick="selectCalendarDate('${ds}')" class="calendar-day ${ds===tStr?'today':''} ${ds===selectedCalendarDate?'selected':''} ${hol?'holiday':''} font-semibold"><span>${d}</span>${hs?'<div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1"></div>':''}${hol?`<div class="holiday-text">${hol.localName}</div>`:''}</div>`;
-            }
-            g.innerHTML = html; renderSelectedDateActivities(selectedCalendarDate);
-        }
-        function selectCalendarDate(d) { selectedCalendarDate = d; const ad = document.getElementById('actDate'); if(ad) ad.value = d; renderCalendar(); }
-        function renderSelectedDateActivities(d) { 
-            const t = document.getElementById('selectedDateTitle'), l = document.getElementById('selectedDateActivities');
-            if(t) { const hol = holidays.find(h=>h.date===d); t.innerHTML = `Jadwal: ${getReadableDate(d)} ${hol?`<span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full align-middle ml-2">${hol.localName}</span>`:''}`; }
-            if(l) {
-                const as = activities.filter(a=>a.date===d).sort((a,b)=>a.time.localeCompare(b.time));
-                l.innerHTML = as.map(a=>`<div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700 flex justify-between items-center text-sm group transition-all hover:bg-gray-100 dark:hover:bg-gray-700"><div class="flex items-center gap-2 min-w-0"><span class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-black text-xs shrink-0">${a.time}</span> <span class="font-semibold text-gray-800 dark:text-gray-200 truncate">${a.title}</span> ${getPriorityBadge(a.priority)}</div><div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="editActivity('${a.id}')" class="text-blue-500 bg-blue-50 dark:bg-gray-800 p-1.5 rounded"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="deleteActivity('${a.id}')" class="text-red-500 bg-red-50 dark:bg-gray-800 p-1.5 rounded"><i class="ph-bold ph-trash"></i></button></div></div>`).join('') || '<div class="text-center py-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700"><i class="ph-fill ph-coffee text-3xl text-gray-300 dark:text-gray-600 mb-2"></i><p class="text-xs text-gray-400 font-medium">Kosong. Bebas tugas!</p></div>';
-            }
-        }
-        function changeMonth(s) { const oy = currentYear; currentMonth += s; if(currentMonth<0){currentMonth=11;currentYear--;} else if(currentMonth>11){currentMonth=0;currentYear++;} if(oy!==currentYear) fetchHolidays(currentYear); else renderCalendar(); }
-        function deleteActivity(id) { showConfirm("Hapus kegiatan ini?", () => { activities = activities.filter(a=>a.id!==id); localStorage.setItem('dashboard_activities', JSON.stringify(activities)); refreshAll(); window.syncToCloud(); }); }
-        
-        const aRep = document.getElementById('actRepeat'); if(aRep) aRep.addEventListener('change', e => { const uc=document.getElementById('repeatUntilContainer'), ru=document.getElementById('actRepeatUntil'); if(!uc||!ru) return; if(e.target.value!=='none'){uc.classList.remove('hidden');ru.required=true;}else{uc.classList.add('hidden');ru.required=false;} });
-        const aForm = document.getElementById('activityForm');
-        if (aForm) {
-            aForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const v = id => document.getElementById(id).value;
-                const d={title:v('actTitle'), date:v('actDate'), time:v('actTime'), endTime:v('actEndTime'), priority:v('actPriority')};
-                const rt = v('actRepeat'), ru = v('actRepeatUntil');
-
-                if(editingActivityId) {
-                    const idx = activities.findIndex(a=>a.id===editingActivityId); if(idx!==-1) activities[idx]={...activities[idx],...d};
-                    editingActivityId=null; document.getElementById('btnSubmitAct').innerText="Simpan Jadwal"; document.getElementById('btnCancelActEdit').classList.add('hidden'); document.getElementById('actRepeat').disabled=false; selectedCalendarDate=d.date;
-                } else {
-                    let cd = new Date(d.date); const ed = rt!=='none'&&ru ? new Date(ru) : new Date(d.date); const md = new Date(); md.setFullYear(md.getFullYear()+1); const maxEd = ed>md ? md : ed;
-                    while(cd <= maxEd) { activities.push({id:Date.now()+Math.random().toString(36).substr(2,5), ...d, date:getFormatDate(cd)}); if(rt==='daily') cd.setDate(cd.getDate()+1); else if(rt==='weekly') cd.setDate(cd.getDate()+7); else if(rt==='monthly') cd.setMonth(cd.getMonth()+1); else break; }
-                }
-                const aru = document.getElementById('actRepeatUntil'); if(aru) aru.required=false;
-                localStorage.setItem('dashboard_activities', JSON.stringify(activities)); e.target.reset(); document.getElementById('actDate').value=selectedCalendarDate; const c=document.getElementById('repeatUntilContainer'); if(c) c.classList.add('hidden');
-                refreshAll(); window.syncToCloud();
-            });
-        }
-        function editActivity(id) {
-            const a = activities.find(x=>x.id===id); if(a) { editingActivityId=id; const sv=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val;}; sv('actTitle',a.title); sv('actDate',a.date); sv('actTime',a.time); sv('actEndTime',a.endTime||a.time); sv('actPriority',a.priority||'low');
-            const ar=document.getElementById('actRepeat'); if(ar){ar.value='none';ar.disabled=true;} const aru=document.getElementById('actRepeatUntil'); if(aru)aru.required=false; const uc=document.getElementById('repeatUntilContainer'); if(uc)uc.classList.add('hidden');
-            const bs=document.getElementById('btnSubmitAct'); if(bs)bs.innerText="Update Jadwal"; const bc=document.getElementById('btnCancelActEdit'); if(bc)bc.classList.remove('hidden'); switchTab('waktu'); document.getElementById('activityForm').scrollIntoView({behavior:'smooth'}); }
-        }
-        const bca = document.getElementById('btnCancelActEdit'); if(bca) bca.onclick=()=>{editingActivityId=null;document.getElementById('activityForm').reset();document.getElementById('actDate').value=selectedCalendarDate;document.getElementById('btnSubmitAct').innerText="Simpan Jadwal";document.getElementById('btnCancelActEdit').classList.add('hidden');document.getElementById('actRepeat').disabled=false;document.getElementById('actRepeatUntil').required=false;document.getElementById('repeatUntilContainer').classList.add('hidden');};
-
-        // ===============================
-        // TASKS & HABITS
-        // ===============================
-        function renderTasks() {
-            const dL = document.getElementById('dashboardTaskList'), pL = document.getElementById('pendingTaskList'), cL = document.getElementById('completedTaskList');
-            if(dL) dL.innerHTML=""; if(pL) pL.innerHTML=""; if(cL) cL.innerHTML="";
-            const ts = getFormatDate(new Date()), lim = new Date(); lim.setDate(lim.getDate()+3); const ls = getFormatDate(lim);
-
-            tasks.forEach(t => {
-                let db = `<span class="text-[9px] text-gray-400 font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">${getReadableDate(t.date).split(' ').slice(0,2).join(' ')}</span>`;
-                if(!t.completed) {
-                    if(t.date===ts) db='<span class="text-[9px] bg-orange-100 text-orange-600 dark:bg-orange-900/50 px-1.5 py-0.5 rounded font-black">HARI INI</span>';
-                    else if(t.date<ts) db='<span class="text-[9px] bg-red-100 text-red-600 dark:bg-red-900/50 px-1.5 py-0.5 rounded font-black">TERLEWAT</span>';
-                }
-
-                const sh = `<div class="p-2.5 bg-gray-50/50 dark:bg-gray-900/30 border border-gray-100 dark:border-gray-700/50 rounded-xl flex justify-between items-center group hover:bg-white dark:hover:bg-gray-700 cursor-pointer transition-all" onclick="toggleTask('${t.id}')"><div class="flex items-center gap-2.5 flex-1 min-w-0"><i class="ph-bold ph-circle text-gray-300 dark:text-gray-600 text-lg shrink-0 group-hover:text-orange-500 transition-colors"></i><span class="font-semibold text-xs text-gray-800 dark:text-gray-200 truncate">${t.text}</span></div><div class="shrink-0 ml-2">${db}</div></div>`;
-                const mh = `<div class="p-3.5 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl flex justify-between items-center group transition-all hover:shadow-md"><div class="flex items-center gap-3 cursor-pointer flex-1 min-w-0" onclick="toggleTask('${t.id}')"><i class="ph-fill ${t.completed?'ph-check-circle text-green-500':'ph-circle text-gray-300 dark:text-gray-600'} text-2xl shrink-0 group-hover:scale-110 transition-transform"></i><span class="${t.completed?'line-through text-gray-400 font-medium':'font-bold text-gray-800 dark:text-gray-100'} truncate text-sm">${t.text}</span></div><div class="flex items-center gap-3 shrink-0">${db}<div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">${!t.completed ? `<button onclick="aiBreakdownTask('${t.id}')" class="text-purple-500 bg-purple-50 dark:bg-gray-700 p-1.5 rounded-lg"><i class="ph-bold ph-sparkle"></i></button>` : ''}<button onclick="editTask('${t.id}')" class="text-blue-500 bg-blue-50 dark:bg-gray-700 p-1.5 rounded-lg"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="deleteTask('${t.id}')" class="text-red-500 bg-red-50 dark:bg-gray-700 p-1.5 rounded-lg"><i class="ph-bold ph-trash"></i></button></div></div></div>`;
-                
-                if(t.completed) { if(cL) cL.innerHTML+=mh; }
-                else { if(pL) pL.innerHTML+=mh; if(t.date<=ls && dL) dL.innerHTML+=sh; }
-            });
-            if(dL && !dL.innerHTML) dL.innerHTML='<div class="text-center py-6 opacity-50"><i class="ph-fill ph-check-circle text-4xl text-green-500 mb-2"></i><p class="text-xs font-bold">Semua beres!</p></div>';
-            if(pL && !pL.innerHTML) pL.innerHTML='<div class="text-center py-6 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl"><p class="text-sm font-bold text-gray-400">Tidak ada tugas tertunda.</p></div>';
-            renderStatsAndBadges();
-        }
-        function toggleTask(id) { const i=tasks.findIndex(t=>t.id===id); tasks[i].completed=!tasks[i].completed; if(tasks[i].completed){ playerData.dailyQuest.tasks++; addXP(10); checkDailyQuestCompletion(); } localStorage.setItem('dashboard_tasks',JSON.stringify(tasks)); renderTasks(); window.syncToCloud(); }
-        function deleteTask(id) { showConfirm("Hapus tugas ini?",()=>{tasks=tasks.filter(t=>t.id!==id);localStorage.setItem('dashboard_tasks',JSON.stringify(tasks));renderTasks();window.syncToCloud();}); }
-        function clearCompletedTasks() { showConfirm("Bersihkan tugas selesai?",()=>{tasks=tasks.filter(t=>!t.completed);localStorage.setItem('dashboard_tasks',JSON.stringify(tasks));renderTasks();window.syncToCloud();}); }
-        function editTask(id) { const t=tasks.find(x=>x.id===id); if(t){ editingTaskId=id; document.getElementById('newTaskInput').value=t.text; document.getElementById('newTaskDate').value=t.date; document.getElementById('btnSubmitTask').innerText="Update"; document.getElementById('btnCancelTaskEdit').classList.remove('hidden'); switchTab('tugas'); document.getElementById('taskForm').scrollIntoView({behavior:'smooth'}); } }
-        const bct = document.getElementById('btnCancelTaskEdit'); if(bct) bct.onclick=()=>{editingTaskId=null;document.getElementById('taskForm').reset();document.getElementById('newTaskDate').value=getFormatDate(new Date());document.getElementById('btnSubmitTask').innerText="Simpan";document.getElementById('btnCancelTaskEdit').classList.add('hidden');};
-        const tf = document.getElementById('taskForm'); if(tf) tf.addEventListener('submit',e=>{ e.preventDefault(); const txt=document.getElementById('newTaskInput').value.trim(); const dt=document.getElementById('newTaskDate').value||getFormatDate(new Date()); if(editingTaskId){ const i=tasks.findIndex(t=>t.id===editingTaskId); if(i!==-1)tasks[i]={...tasks[i],text:txt,date:dt}; editingTaskId=null; document.getElementById('btnSubmitTask').innerText="Simpan"; document.getElementById('btnCancelTaskEdit').classList.add('hidden'); } else { tasks.push({id:Date.now()+Math.random().toString(36).substr(2,5),text:txt,date:dt,completed:false,timestamp:new Date().toISOString()}); } localStorage.setItem('dashboard_tasks',JSON.stringify(tasks)); e.target.reset(); document.getElementById('newTaskDate').value=getFormatDate(new Date()); renderTasks(); window.syncToCloud(); });
-
-        function renderHabits() {
-            const list = document.getElementById('habitList'); if(!list) return;
-            const ts = getFormatDate(new Date()), yd = new Date(); yd.setDate(yd.getDate()-1); const ys = getFormatDate(yd);
-            list.innerHTML = habits.map(h => {
-                const ic = h.lastDoneDate === ts; if(h.lastDoneDate!==ts && h.lastDoneDate!==ys && h.streak>0) h.streak=0;
-                return `<div class="p-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl flex justify-between items-center group transition-all shadow-sm"><div class="flex items-center gap-3 flex-1 min-w-0"><button onclick="toggleHabit('${h.id}')" class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${ic?'bg-rose-500 text-white shadow-md shadow-rose-500/30 scale-105':'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-gray-200'}">${ic?'<i class="ph-bold ph-check text-lg"></i>':''}</button><span class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate ${ic?'opacity-50':''}">${h.name}</span></div><div class="flex items-center gap-4 shrink-0"><span class="flex items-center gap-1.5 text-xs font-black ${h.streak>0?'text-orange-500':'text-gray-400'} bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded-lg"><i class="ph-fill ph-fire text-base"></i> ${h.streak}</span><button onclick="deleteHabit('${h.id}')" class="text-red-400 hover:text-white hover:bg-red-500 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"><i class="ph-bold ph-trash"></i></button></div></div>`;
-            }).join('') || '<div class="text-center py-6 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl"><p class="text-sm font-bold text-gray-400">Belum ada habit.</p></div>';
-            renderStatsAndBadges();
-        }
-        const hf = document.getElementById('habitForm'); if(hf) hf.addEventListener('submit',e=>{ e.preventDefault(); const inp=document.getElementById('newHabitInput'); if(!inp||!inp.value.trim())return; habits.push({id:Date.now().toString(),name:inp.value.trim(),streak:0,lastDoneDate:""}); localStorage.setItem('dashboard_habits',JSON.stringify(habits)); inp.value=""; renderHabits(); window.syncToCloud(); });
-        function toggleHabit(id) { const ts=getFormatDate(new Date()), yd=new Date(); yd.setDate(yd.getDate()-1); const ys=getFormatDate(yd); const i=habits.findIndex(h=>h.id===id); if(i===-1)return; const h=habits[i]; if(h.lastDoneDate===ts){h.lastDoneDate=ys;h.streak=Math.max(0,h.streak-1);}else{if(h.lastDoneDate===ys)h.streak++;else h.streak=1;h.lastDoneDate=ts;} localStorage.setItem('dashboard_habits',JSON.stringify(habits)); renderHabits(); window.syncToCloud(); }
-        function deleteHabit(id) { showConfirm("Hapus habit ini?",()=>{habits=habits.filter(h=>h.id!==id);localStorage.setItem('dashboard_habits',JSON.stringify(habits));renderHabits();window.syncToCloud();}); }
-
-        // ===============================
-        // KEUANGAN
-        // ===============================
-        function renderCategories() {
-            const l=document.getElementById('categoriesList'), s=document.getElementById('trxCategory');
-            if(l) l.innerHTML = financeCategories.map(c=>`<div class="bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 px-2.5 py-1 rounded-lg text-[10px] font-black border border-pink-200 dark:border-pink-800 flex items-center gap-1.5 shadow-sm">${c} <button onclick="deleteCategory('${c}')" class="hover:text-red-500"><i class="ph-bold ph-x"></i></button></div>`).join('');
-            if(s) { const cv=s.value; s.innerHTML=financeCategories.map(c=>`<option value="${c}">${c}</option>`).join(''); if(financeCategories.includes(cv))s.value=cv; }
-        }
-        const cf=document.getElementById('categoryForm'); if(cf)cf.addEventListener('submit',e=>{e.preventDefault();const v=document.getElementById('newCategoryInput').value.trim();if(v&&!financeCategories.includes(v)){financeCategories.push(v);localStorage.setItem('dashboard_categories',JSON.stringify(financeCategories));e.target.reset();renderCategories();}});
-        function deleteCategory(c) { showConfirm(`Hapus kategori "${c}"?`,()=>{financeCategories=financeCategories.filter(x=>x!==c);localStorage.setItem('dashboard_categories',JSON.stringify(financeCategories));renderCategories();}); }
-        
-        function renderSources() {
-            const l=document.getElementById('sourcesList'), s=document.getElementById('trxSource'), f=document.getElementById('transferFrom'), t=document.getElementById('transferTo');
-            if(l) l.innerHTML = sources.map(x=>`<div class="bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 px-2.5 py-1 rounded-lg text-[10px] font-black border border-teal-200 dark:border-teal-800 flex items-center gap-1.5 shadow-sm">${x} <button onclick="deleteSource('${x}')" class="hover:text-red-500"><i class="ph-bold ph-x"></i></button></div>`).join('');
-            const opt = sources.map(x=>`<option value="${x}">${x}</option>`).join('');
-            if(s){ const cv=s.value; s.innerHTML=opt; if(sources.includes(cv))s.value=cv; }
-            if(f){ const cv=f.value; f.innerHTML=opt; if(sources.includes(cv))f.value=cv; }
-            if(t){ const cv=t.value; t.innerHTML=opt; if(sources.includes(cv))t.value=cv; else if(sources.length>1)t.value=sources[1]; }
-            const bf=document.getElementById('balanceFilter'); if(bf){ const cv=bf.value; bf.innerHTML='<option value="all" class="text-gray-900">Gabungan Semua</option>'+opt; bf.value=cv; }
-        }
-        const sf=document.getElementById('sourceForm'); if(sf)sf.addEventListener('submit',e=>{e.preventDefault();const v=document.getElementById('newSourceInput').value.trim();if(v&&!sources.includes(v)){sources.push(v);localStorage.setItem('dashboard_sources',JSON.stringify(sources));e.target.reset();renderSources();window.syncToCloud();}});
-        function deleteSource(s) { showConfirm(`Hapus sumber "${s}"?`,()=>{sources=sources.filter(x=>x!==s);localStorage.setItem('dashboard_sources',JSON.stringify(sources));renderSources();window.syncToCloud();}); }
-
-        function calculateBalance() {
-            const fv = document.getElementById('balanceFilter')?.value || 'all';
-            let rt=0, t=0, inc=0, exp=0;
-            transactions.forEach(x=>{
-                const am=Number(x.amount)||0; const isT = x.category==="Transfer"||x.desc.startsWith("[TRANSFER]");
-                if(x.type==='income') rt+=am; else rt-=am;
-                if(fv==='all' || x.source===fv) {
-                    if(x.type==='income') { t+=am; if(!isT)inc+=am; } else { t-=am; if(!isT)exp+=am; }
-                }
-            });
-            const dbT = document.getElementById('dashboardTotalBalance'); if(dbT) dbT.innerText=formatRupiah(rt);
-            const dI = document.getElementById('dashIncome'); if(dI) dI.innerText=`+ ${formatRupiah(inc)}`;
-            const dE = document.getElementById('dashExpense'); if(dE) dE.innerText=`- ${formatRupiah(exp)}`;
-            
-            const tb = document.getElementById('totalBalance'); if(tb) tb.innerText=formatRupiah(t);
-            const ti = document.getElementById('totalIncome'); if(ti) ti.innerText=`+ ${formatRupiah(inc)}`;
-            const te = document.getElementById('totalExpense'); if(te) te.innerText=`- ${formatRupiah(exp)}`;
-            renderChart();
-        }
-
-        function renderTransactions() {
-            const l = document.getElementById('fullTransactionList');
-            const sorted = [...transactions].sort((a,b)=>b.timestamp.localeCompare(a.timestamp));
-            if(l) {
-                l.innerHTML = sorted.map(t=>{
-                    const isT = t.category==="Transfer"||t.desc.startsWith("[TRANSFER]");
-                    const ic = isT ? "ph-arrows-left-right text-blue-500 bg-blue-100 dark:bg-blue-900/50" : (t.type==='income' ? "ph-arrow-down-left text-green-500 bg-green-100 dark:bg-green-900/50" : "ph-arrow-up-right text-red-500 bg-red-100 dark:bg-red-900/50");
-                    const ac = isT ? "text-blue-600 dark:text-blue-400" : (t.type==='income' ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400");
-                    return `<div class="p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 flex justify-between items-center group shadow-sm transition-all hover:shadow-md"><div class="flex items-center gap-3 min-w-0 pr-2"><div class="p-2.5 rounded-xl shrink-0 ${ic.split(' ').slice(1).join(' ')}"><i class="ph-bold ${ic.split(' ')[0]} text-lg"></i></div><div class="min-w-0"><div class="font-bold text-sm text-gray-900 dark:text-white truncate">${t.desc}</div><div class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">${t.source} • ${t.category}</div></div></div><div class="flex items-center gap-3 shrink-0"><div class="text-right"><div class="font-black text-sm ${ac}">${t.type==='income'?'+':'-'} ${formatRupiah(t.amount)}</div><div class="text-[9px] text-gray-400 font-medium">${getReadableDate(t.timestamp)}</div></div><div class="flex flex-col sm:flex-row gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="editTransaction('${t.id}')" class="text-blue-500 bg-blue-50 dark:bg-gray-700 p-1.5 rounded"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="deleteTransaction('${t.id}')" class="text-red-500 bg-red-50 dark:bg-gray-700 p-1.5 rounded"><i class="ph-bold ph-trash"></i></button></div></div></div>`;
-                }).join('') || '<div class="text-center py-8"><i class="ph-fill ph-receipt text-4xl text-gray-300 dark:text-gray-600 mb-2"></i><p class="text-xs font-bold text-gray-400">Belum ada transaksi.</p></div>';
-            }
-        }
-
-        const trxf = document.getElementById('transactionForm');
-        if(trxf) trxf.addEventListener('submit',e=>{
-            e.preventDefault(); const v=id=>document.getElementById(id).value;
-            const d = {type:v('trxType'), source:v('trxSource'), category:v('trxCategory'), amount:parseInt(v('trxAmount'))||0, desc:v('trxDesc')};
-            if(editingTrxId) { const i=transactions.findIndex(t=>t.id===editingTrxId); if(i!==-1) transactions[i]={...transactions[i],...d}; editingTrxId=null; document.getElementById('btnSubmitTrx').innerText="Simpan Transaksi"; document.getElementById('btnCancelTrxEdit').classList.add('hidden'); }
-            else { transactions.push({id:Date.now().toString(),...d,timestamp:new Date().toISOString()}); addXP(2); checkBadgeUnlock(); }
-            localStorage.setItem('dashboard_transactions',JSON.stringify(transactions)); calculateBalance(); renderTransactions(); window.syncToCloud(); e.target.reset();
-        });
-        function editTransaction(id) { const t=transactions.find(x=>x.id===id); editingTrxId=id; const sv=(i,val)=>{document.getElementById(i).value=val;}; sv('trxType',t.type); const sel=document.getElementById('trxSource'); if(sel&&![...sel.options].some(o=>o.value===t.source)) sel.innerHTML+=`<option value="${t.source}">${t.source} (Dihapus)</option>`; if(sel)sel.value=t.source; sv('trxCategory',t.category); sv('trxAmount',t.amount); sv('trxDesc',t.desc); document.getElementById('btnSubmitTrx').innerText="Update"; document.getElementById('btnCancelTrxEdit').classList.remove('hidden'); switchTab('keuangan'); document.getElementById('transactionForm').scrollIntoView({behavior:'smooth'}); }
-        const bcte = document.getElementById('btnCancelTrxEdit'); if(bcte) bcte.onclick=()=>{editingTrxId=null;document.getElementById('transactionForm').reset();document.getElementById('btnSubmitTrx').innerText="Simpan Transaksi";document.getElementById('btnCancelTrxEdit').classList.add('hidden');};
-        function deleteTransaction(id) { showConfirm("Hapus transaksi ini?",()=>{transactions=transactions.filter(x=>x.id!==id);localStorage.setItem('dashboard_transactions',JSON.stringify(transactions));calculateBalance();renderTransactions();window.syncToCloud();}); }
-
-        const tForm = document.getElementById('transferForm');
-        if(tForm) tForm.addEventListener('submit',e=>{
-            e.preventDefault(); const f=document.getElementById('transferFrom').value, t=document.getElementById('transferTo').value, a=parseInt(document.getElementById('transferAmount').value)||0;
-            if(f===t){showAlert("Sumber dan tujuan tidak boleh sama!");return;} if(a<=0)return;
-            const bId=Date.now().toString(), ts=new Date().toISOString();
-            transactions.push({id:bId+"_out",type:"expense",source:f,category:"Transfer",amount:a,desc:`[TRANSFER] Ke ${t}`,timestamp:ts});
-            transactions.push({id:bId+"_in",type:"income",source:t,category:"Transfer",amount:a,desc:`[TRANSFER] Dari ${f}`,timestamp:ts});
-            localStorage.setItem('dashboard_transactions',JSON.stringify(transactions)); calculateBalance(); renderTransactions(); window.syncToCloud(); e.target.reset(); showAlert(`Transfer <b>${formatRupiah(a)}</b> berhasil dicatat!`);
+            // Tampilkan Hasil
+            showResult(finalDataToSave);
         });
 
-        function renderChart() {
-            const cv = document.getElementById('expenseChart'); if(!cv) return; const ctx = cv.getContext('2d');
-            const data = {}, fv = document.getElementById('balanceFilter')?.value||'all';
-            transactions.filter(t=>t.type==='expense'&&t.category!=="Transfer"&&!t.desc.startsWith("[TRANSFER]")&&(fv==='all'||t.source===fv)).forEach(t=>data[t.category]=(data[t.category]||0)+t.amount);
-            Chart.defaults.color = isDarkMode?'#9ca3af':'#6b7280'; Chart.defaults.font.family = 'Inter';
-            if(expenseChartInstance) expenseChartInstance.destroy();
-            expenseChartInstance = new Chart(ctx, { type:'doughnut', data:{labels:Object.keys(data), datasets:[{data:Object.values(data), backgroundColor:['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#64748b'], borderColor:isDarkMode?'#1f2937':'#ffffff', borderWidth:3, hoverOffset:4}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{boxWidth:12, usePointStyle:true, font:{size:11, weight:'bold'}}}}, cutout:'65%'} });
-        }
-        function exportKeuanganCSV() { if(!transactions.length){showAlert("Tidak ada data.");return;} let c="data:text/csv;charset=utf-8,Tanggal,Jenis,Kategori,Nominal,Sumber,Keterangan\n"; [...transactions].sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).forEach(t=>{c+=`${getFormatDate(new Date(t.timestamp))},${t.type==='income'?'Pemasukan':'Pengeluaran'},${t.category},${t.amount},${t.source},${t.desc.replace(/,/g," ")}\n`;}); const u=encodeURI(c), l=document.createElement("a"); l.setAttribute("href",u); l.setAttribute("download",`Laporan_Keuangan_${getFormatDate(new Date())}.csv`); document.body.appendChild(l); l.click(); document.body.removeChild(l); }
+        // Fungsi Menampilkan Hasil
+        function showResult(data) {
+            formSection.classList.add('hidden');
+            resultSection.classList.remove('hidden');
 
-        // ===============================
-        // JURNAL REFLEKSI
-        // ===============================
-        function renderJournals() {
-            const l = document.getElementById('journalList'); if(!l) return;
-            if(!Array.isArray(journals)) journals=[];
-            const s = [...journals].sort((a,b)=>(b.timestamp||"").localeCompare(a.timestamp||""));
-            l.innerHTML = s.map(j=>`
-                <div class="p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm rounded-xl group relative overflow-hidden transition-all hover:shadow-md">
-                    <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
-                    <div class="flex justify-between items-start mb-2 pl-3">
-                        <div class="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-1.5"><i class="ph-bold ph-calendar-blank text-blue-500"></i> ${getReadableDate(j.date)}</div>
-                        <button onclick="deleteJournal('${j.id}')" class="text-red-400 hover:text-red-600 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity bg-red-50 dark:bg-red-900/30 p-1.5 rounded-lg"><i class="ph-bold ph-trash"></i></button>
-                    </div>
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-wrap pl-3">"${j.text}"</p>
-                </div>
-            `).join('') || '<div class="text-center py-10 opacity-50"><i class="ph-fill ph-notebook text-5xl mb-3"></i><p class="text-xs font-bold uppercase tracking-widest">Belum ada jurnal</p></div>';
-        }
-        const jf = document.getElementById('journalForm'); if(jf) jf.addEventListener('submit',e=>{ e.preventDefault(); const i=document.getElementById('newJournalInput'); if(!i||!i.value.trim())return; if(!Array.isArray(journals)) journals=[]; journals.push({id:Date.now().toString(), date:getFormatDate(new Date()), text:i.value.trim(), timestamp:new Date().toISOString()}); localStorage.setItem('dashboard_journals',JSON.stringify(journals)); i.value=""; renderJournals(); playerData.dailyQuest.journal++; addXP(3); checkDailyQuestCompletion(); window.syncToCloud(); });
-        function deleteJournal(id) { showConfirm("Hapus jurnal ini?",()=>{journals=journals.filter(j=>j.id!==id);localStorage.setItem('dashboard_journals',JSON.stringify(journals));renderJournals();window.syncToCloud();}); }
-
-        function renderStatsAndBadges() {
-            const tot=tasks.length, comp=tasks.filter(t=>t.completed).length, prog=tot===0?0:Math.round((comp/tot)*100);
-            const pt=document.getElementById('taskProgressText'), pb=document.getElementById('taskProgressBar'), ps=document.getElementById('taskSubText');
-            if(pt) pt.innerText=`${prog}%`; if(pb) pb.style.width=`${prog}%`; if(ps) ps.innerText=`${comp} dari ${tot} tugas diselesaikan`;
-            const sp=document.getElementById('statPomodoro'); if(sp) sp.innerText=stats.pomodoroCount||0;
-            const ms=habits.length>0?Math.max(...habits.map(h=>h.streak)):0; const ss=document.getElementById('statStreak'); if(ss) ss.innerText=ms;
+            document.getElementById('res-nama').textContent = data.nama;
+            document.getElementById('res-kelas').textContent = data.kelas;
+            document.getElementById('res-link').textContent = data.link;
+            document.getElementById('res-link').href = data.link;
+            document.getElementById('res-btn-open').href = data.link;
+            
+            // Setup Copy Button
+            document.getElementById('btn-copy').onclick = () => copyToClipboard(data.link);
         }
 
-        // ===============================
-        // INIT & BOOTSTRAP
-        // ===============================
-        window.onload = () => {
-            const ls = document.getElementById('lockScreen'); if(userPin && ls) ls.classList.replace('hidden', 'flex');
-            const qE = document.getElementById('dailyQuote'); if(qE) { const d = Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/1000/60/60/24); qE.innerText=`"${quotes[d%quotes.length]}"`; }
+        // Fungsi Salin Link
+        function copyToClipboard(text) {
+            const tempInput = document.createElement("input");
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
             
-            fetchWeather(); 
-            fetchHolidays(currentYear);
-            refreshAll(); 
-            loadFromSpreadsheet();
+            try {
+                document.execCommand("copy");
+                showToast();
+            } catch (err) {
+                console.error("Gagal menyalin text: ", err);
+            }
             
-            setInterval(() => {
-                const nw = new Date(); const cm = nw.toLocaleTimeString('id-ID',{hour12:false}).slice(0,5);
-                const ck = document.getElementById('liveClock'); if(ck) ck.innerText = cm; 
-                const ld = document.getElementById('liveDate'); if(ld) ld.innerText = nw.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-                
-                if (nw.getSeconds() === 0) {
-                    renderUpcomingActivity(); 
-                }
-            }, 1000);
+            document.body.removeChild(tempInput);
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
             
-            const ntd = document.getElementById('newTaskDate'); if(ntd) ntd.value=getFormatDate(new Date());
-            const actDate = document.getElementById('actDate'); if(actDate) actDate.value=getFormatDate(new Date());
-        };
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
     </script>
 </body>
 </html>
